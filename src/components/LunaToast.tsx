@@ -2,47 +2,27 @@
 
 // ===========================================
 // LunaToast - ルナのセリフ（トースト表示）
-// 仕様書 v1.2 準拠
-// イベント発生時にトースト表示
+// 仕様書 v1.4 準拠
+// Gemini API でセリフを動的生成
 // ===========================================
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTaskStore } from '@/stores/taskStore';
 import type { LunaContext } from '@/types';
 
-// 静的セリフデータベース（後でGemini API生成に置き換え）
-const LUNA_LINES: Record<LunaContext, string[]> = {
-  ignition: [
-    'おはよ。今日も走るで？',
-    'エンジン、かかっとるで。',
-    'ほな、始めよか。',
-  ],
-  success: [
-    'やるやん。ちょっと見直したわ。',
-    'ええセンスしとるな。',
-    'おお、できたやん。',
-  ],
-  failure: [
-    'あはは、やめたんか。まあええけど。',
-    'サボりも休憩のうちやで。',
-    'ダサい負け方はあかんで？',
-  ],
-  idle: [
-    '暇なんか？',
-    'なんかせえへんの？',
-    '待っとるで。',
-  ],
-  bond: [
-    'こんな時間までおるん？',
-    '無理せんでええんやで。',
-    '私はおるから。',
-  ],
+// フォールバック用の静的セリフ（API呼び出し前・エラー時）
+const FALLBACK_LINES: Record<LunaContext, string[]> = {
+  ignition: ['おはよ。今日も走るで？', 'エンジン、かかっとるで。', 'ほな、始めよか。'],
+  success: ['やるやん。ちょっと見直したわ。', 'ええセンスしとるな。', 'おお、できたやん。'],
+  failure: ['あはは、やめたんか。まあええけど。', 'サボりも休憩のうちやで。', 'ダサい負け方はあかんで？'],
+  idle: ['暇なんか？', 'なんかせえへんの？', '待っとるで。'],
+  bond: ['こんな時間までおるん？', '無理せんでええんやで。', '私はおるから。'],
 };
 
 // ランダムにセリフを選択
 const getRandomLine = (context: LunaContext): string => {
-  const lines = LUNA_LINES[context];
+  const lines = FALLBACK_LINES[context];
   return lines[Math.floor(Math.random() * lines.length)];
 };
 
@@ -50,25 +30,58 @@ export function LunaToast() {
   const { lunaContext, lunaMode } = useTaskStore();
   const [visible, setVisible] = useState(false);
   const [currentLine, setCurrentLine] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const prevContextRef = useRef<LunaContext | null>(null);
+
+  // セリフを取得（APIまたはフォールバック）
+  const fetchLine = useCallback(async (context: LunaContext) => {
+    setIsLoading(true);
+
+    // まずフォールバックを表示（即座に反応）
+    const fallback = getRandomLine(context);
+    setCurrentLine(fallback);
+    setVisible(true);
+
+    try {
+      const response = await fetch('/api/luna', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: lunaMode,
+          context,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.line && data.source !== 'error') {
+          // API成功時は置き換え
+          setCurrentLine(data.line);
+        }
+      }
+    } catch (error) {
+      // エラー時はフォールバックのまま
+      console.error('Failed to fetch Luna line:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [lunaMode]);
 
   useEffect(() => {
     // コンテキストが変わったらトースト表示
     if (prevContextRef.current !== lunaContext) {
-      const line = getRandomLine(lunaContext);
-      setCurrentLine(line);
-      setVisible(true);
+      fetchLine(lunaContext);
 
-      // 3秒後に消える
+      // 4秒後に消える（API待ち時間を考慮して長めに）
       const timer = setTimeout(() => {
         setVisible(false);
-      }, 3000);
+      }, 4000);
 
       prevContextRef.current = lunaContext;
 
       return () => clearTimeout(timer);
     }
-  }, [lunaContext]);
+  }, [lunaContext, fetchLine]);
 
   // entertainedモードの時は背景色を変える
   const bgColor = lunaMode === 'entertained'
@@ -86,7 +99,7 @@ export function LunaToast() {
         >
           <div className="flex items-center gap-2">
             <span className="text-lg">🌙</span>
-            <span className="text-zinc-100 font-medium">
+            <span className={`text-zinc-100 font-medium ${isLoading ? 'opacity-70' : ''}`}>
               {currentLine}
             </span>
           </div>
