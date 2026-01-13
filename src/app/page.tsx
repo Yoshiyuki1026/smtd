@@ -13,6 +13,7 @@ import { BacklogSection } from '@/components/BacklogSection';
 import { GoalCounter } from '@/components/GoalCounter';
 import { LunaToast } from '@/components/LunaToast';
 import { RewardEffect } from '@/components/RewardEffect';
+import { ProcrastinationBreakthrough } from '@/components/ProcrastinationBreakthrough';
 
 export default function Home() {
   const { checkDateChange } = useTaskStore();
@@ -36,6 +37,9 @@ export default function Home() {
 
       {/* ルナのトースト */}
       <LunaToast />
+
+      {/* 先延ばしブレイクスルー */}
+      <ProcrastinationBreakthrough />
 
       <main className="mx-auto max-w-lg px-4 py-8">
         {/* ヘッダー */}

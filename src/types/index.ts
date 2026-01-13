@@ -40,8 +40,9 @@ export type LunaMode = 'standard' | 'entertained';
  * - failure: タスク削除時
  * - idle: 待機中
  * - bond: 連星の絆（深夜帯、長時間放置）
+ * - breakthrough: 先延ばしブレイクスルー（叱咤激励）
  */
-export type LunaContext = 'ignition' | 'success' | 'failure' | 'idle' | 'bond';
+export type LunaContext = 'ignition' | 'success' | 'failure' | 'idle' | 'bond' | 'breakthrough';
 
 /**
  * ルナの状態
