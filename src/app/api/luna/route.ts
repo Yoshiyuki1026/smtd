@@ -13,8 +13,8 @@ const API_KEY = process.env.GEMINI_API_KEY || '';
 // Gemini クライアント初期化
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
-// モデル設定（Gemini 3 Flash - 2025年12月リリース）
-const MODEL_NAME = 'gemini-3-flash';
+// モデル設定（Gemini 3 Flash Preview - 2025年12月リリース）
+const MODEL_NAME = 'gemini-3-flash-preview';
 
 // プロンプトテンプレート
 const SYSTEM_PROMPT = `あなたは「ルナ」というキャラクターです。
