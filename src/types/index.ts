@@ -60,3 +60,11 @@ export interface Reward {
   points: number;
   combo: number;
 }
+
+/**
+ * Slack通知のコンテキスト
+ * - morning: 朝9時（今日のスタート）
+ * - midday: 昼12時（午後に向けて）
+ * - evening: 夜21時（振り返り）
+ */
+export type SlackContext = 'morning' | 'midday' | 'evening';
