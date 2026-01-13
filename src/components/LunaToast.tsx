@@ -11,13 +11,28 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTaskStore } from '@/stores/taskStore';
 import type { LunaContext } from '@/types';
 
-// フォールバック用の静的セリフ
+// フォールバック用の静的セリフ（API失敗時のみ使用）
 const FALLBACK_LINES: Record<LunaContext, string[]> = {
-  ignition: ['おはよ。今日も走るで？', 'エンジン、かかっとるで。', 'ほな、始めよか。'],
-  success: ['やるやん。ちょっと見直したわ。', 'ええセンスしとるな。', 'おお、できたやん。'],
-  failure: ['あはは、やめたんか。まあええけど。', 'サボりも休憩のうちやで。', 'ダサい負け方はあかんで？'],
-  idle: ['暇なんか？', 'なんかせえへんの？', '待っとるで。'],
-  bond: ['こんな時間までおるん？', '無理せんでええんやで。', '私はおるから。'],
+  ignition: [
+    'おはよ。今日も走るで？まあ、あんたのペースでええけん、ぼちぼちやっていこか。',
+    'エンジン、かかっとるで。準備できたら教えてな、私も見とくけん。',
+  ],
+  success: [
+    'やるやん。ちょっと見直したわ。まあ、私が見とったけん当然やけどな。',
+    'ええセンスしとるな。この調子でいけば、今日は勝ち越しやで。',
+  ],
+  failure: [
+    'あはは、やめたんか。まあええけど、ダサい負け方だけはせんといてな。',
+    'サボりも休憩のうちやで。無理せんと、またやりたなった時にやればええ。',
+  ],
+  idle: [
+    '暇なんか？まあ、ゆっくりしとってもええけど、私は待っとるけんな。',
+    'なんかせえへんの？別にせかしとるわけやないけど、気が向いたらな。',
+  ],
+  bond: [
+    'こんな時間までおるん？無理せんでええんやで。私はいつでもおるけん。',
+    '遅くまでようやっとるな。でも、身体壊したら元も子もないで。',
+  ],
 };
 
 const getRandomLine = (context: LunaContext): string => {
@@ -30,17 +45,20 @@ export function LunaToast() {
   const [visible, setVisible] = useState(false);
   const [currentLine, setCurrentLine] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showCount, setShowCount] = useState(0); // トリガー用
+  const [showCount, setShowCount] = useState(0);
   const lastContextRef = useRef<string | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // セリフを取得
+  // セリフを取得（API完了後にタイマー開始）
   const fetchLine = useCallback(async (context: LunaContext) => {
     setIsLoading(true);
-
-    // フォールバックを即表示
-    const fallback = getRandomLine(context);
-    setCurrentLine(fallback);
     setVisible(true);
+    setCurrentLine('...');
+
+    // 既存のタイマーをクリア
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
 
     try {
       const response = await fetch('/api/luna', {
@@ -53,12 +71,22 @@ export function LunaToast() {
         const data = await response.json();
         if (data.line && data.source !== 'error') {
           setCurrentLine(data.line);
+        } else {
+          // エラーの場合はフォールバック
+          setCurrentLine(getRandomLine(context));
         }
+      } else {
+        setCurrentLine(getRandomLine(context));
       }
     } catch (error) {
       console.error('Failed to fetch Luna line:', error);
+      setCurrentLine(getRandomLine(context));
     } finally {
       setIsLoading(false);
+      // API完了後に8秒タイマー開始
+      timerRef.current = setTimeout(() => {
+        setVisible(false);
+      }, 8000);
     }
   }, [lunaMode]);
 
@@ -70,15 +98,8 @@ export function LunaToast() {
   // showCountが変わったらトースト表示
   useEffect(() => {
     if (showCount === 0) return;
-
     fetchLine(lunaContext);
     lastContextRef.current = lunaContext;
-
-    const timer = setTimeout(() => {
-      setVisible(false);
-    }, 8000);
-
-    return () => clearTimeout(timer);
   }, [showCount, fetchLine, lunaContext]);
 
   // コンテキスト変更時（初回以降）
@@ -87,6 +108,15 @@ export function LunaToast() {
       setShowCount(prev => prev + 1);
     }
   }, [lunaContext]);
+
+  // クリーンアップ
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
 
   // ルナ: シアン、Entertained: アンバー（嘲笑モード）
   const toastStyle = lunaMode === 'entertained'
@@ -102,13 +132,13 @@ export function LunaToast() {
           initial={{ opacity: 0, y: -20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.95 }}
-          className={`fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded-lg border px-6 py-3 backdrop-blur-md ${toastStyle}`}
+          className={`fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded-lg border px-6 py-3 backdrop-blur-md max-w-md ${toastStyle}`}
         >
           <div className="flex items-center gap-3">
-            <span className={`text-lg ${lunaMode === 'entertained' ? 'text-amber-400' : 'text-cyan-400'}`}>
+            <span className={`text-lg shrink-0 ${lunaMode === 'entertained' ? 'text-amber-400' : 'text-cyan-400'}`}>
               {iconColor}
             </span>
-            <span className={`text-zinc-100 font-medium tracking-wide ${isLoading ? 'opacity-70' : ''}`}>
+            <span className={`text-zinc-100 font-medium tracking-wide text-sm ${isLoading ? 'animate-pulse' : ''}`}>
               {currentLine}
             </span>
           </div>

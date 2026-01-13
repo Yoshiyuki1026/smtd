@@ -13,8 +13,15 @@ const API_KEY = process.env.GEMINI_API_KEY || '';
 // Gemini クライアント初期化
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
-// モデル設定（Gemini 3 Flash Preview - 2025年12月リリース）
-const MODEL_NAME = 'gemini-3-flash-preview';
+// モデル設定（Gemini 2.0 Flash - 高速版）
+const MODEL_NAME = 'gemini-2.0-flash';
+
+// キャッシュ（メモリ内、5分間有効）
+const lineCache = new Map<string, { line: string; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5分
+
+// APIタイムアウト（10秒）
+const API_TIMEOUT = 10000;
 
 // プロンプトテンプレート
 const SYSTEM_PROMPT = `あなたは「ルナ」というキャラクターです。
@@ -75,6 +82,18 @@ export async function POST(request: Request) {
       taskTitle?: string;
     };
 
+    // キャッシュキー生成
+    const cacheKey = `${mode}-${context}`;
+
+    // キャッシュ確認（taskTitleがない場合のみキャッシュ使用）
+    if (!taskTitle) {
+      const cached = lineCache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        console.log(`Cache hit for ${cacheKey}`);
+        return NextResponse.json({ line: cached.line, source: 'cache' });
+      }
+    }
+
     // APIキーがない場合はフォールバック
     if (!genAI) {
       console.warn('Gemini API key not set, using fallback');
@@ -103,21 +122,43 @@ export async function POST(request: Request) {
 
     userPrompt += `\n\n【指示】\n${CONTEXT_PROMPTS[context]}`;
 
-    const result = await model.generateContent([
-      { text: SYSTEM_PROMPT },
-      { text: userPrompt },
-    ]);
+    // タイムアウト付きAPI呼び出し
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
 
-    const response = result.response;
-    const text = response.text().trim();
+    try {
+      const result = await model.generateContent([
+        { text: SYSTEM_PROMPT },
+        { text: userPrompt },
+      ]);
 
-    // 空の場合はフォールバック
-    if (!text) {
-      const fallbackLine = getRandomFromArray(FALLBACK_LINES[context] || FALLBACK_LINES.idle);
-      return NextResponse.json({ line: fallbackLine, source: 'fallback' });
+      clearTimeout(timeoutId);
+
+      const response = result.response;
+      const text = response.text().trim();
+
+      // 空の場合はフォールバック
+      if (!text) {
+        const fallbackLine = getRandomFromArray(FALLBACK_LINES[context] || FALLBACK_LINES.idle);
+        return NextResponse.json({ line: fallbackLine, source: 'fallback' });
+      }
+
+      // キャッシュに保存
+      lineCache.set(cacheKey, { line: text, timestamp: Date.now() });
+
+      return NextResponse.json({ line: text, source: 'gemini' });
+    } catch (apiError) {
+      clearTimeout(timeoutId);
+
+      // タイムアウトの場合
+      if (apiError instanceof Error && apiError.name === 'AbortError') {
+        console.warn('Gemini API timeout, using fallback');
+        const fallbackLine = getRandomFromArray(FALLBACK_LINES[context] || FALLBACK_LINES.idle);
+        return NextResponse.json({ line: fallbackLine, source: 'timeout' });
+      }
+
+      throw apiError;
     }
-
-    return NextResponse.json({ line: text, source: 'gemini' });
   } catch (error) {
     console.error('Gemini API error:', error);
     // 接続エラーの場合は特別なメッセージ
