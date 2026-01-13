@@ -14,14 +14,18 @@ import type { LunaContext } from '@/types';
 // エラー時のメッセージ
 const ERROR_MESSAGE = '...（ちょっと待って）';
 
+// idle発火までの時間（5分）
+const IDLE_TIMEOUT = 5 * 60 * 1000;
+
 export function LunaToast() {
   const { lunaContext, lunaMode } = useTaskStore();
   const [visible, setVisible] = useState(false);
   const [currentLine, setCurrentLine] = useState('...');
   const [isLoading, setIsLoading] = useState(false);
-  const [showCount, setShowCount] = useState(0);
   const lastContextRef = useRef<string | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hasFiredIdleRef = useRef(false);
 
   // セリフを取得（API完了後にタイマー開始）
   const fetchLine = useCallback(async (context: LunaContext) => {
@@ -64,30 +68,67 @@ export function LunaToast() {
     }
   }, [lunaMode]);
 
-  // 初回マウント時
-  useEffect(() => {
-    setShowCount(1);
-  }, []);
+  // idleタイマーをリセット
+  const resetIdleTimer = useCallback(() => {
+    hasFiredIdleRef.current = false;
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+    }
+    idleTimerRef.current = setTimeout(() => {
+      if (!hasFiredIdleRef.current) {
+        hasFiredIdleRef.current = true;
+        fetchLine('idle');
+      }
+    }, IDLE_TIMEOUT);
+  }, [fetchLine]);
 
-  // showCountが変わったらトースト表示
+  // 初回マウント時（bond: 深夜0-5時）
   useEffect(() => {
-    if (showCount === 0) return;
-    fetchLine(lunaContext);
-    lastContextRef.current = lunaContext;
-  }, [showCount, fetchLine, lunaContext]);
+    const hour = new Date().getHours();
+    const initialContext: LunaContext = (hour >= 0 && hour < 5) ? 'bond' : 'ignition';
+    fetchLine(initialContext);
+    lastContextRef.current = initialContext;
+
+    // idleタイマー開始
+    resetIdleTimer();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // コンテキスト変更時（初回以降）
   useEffect(() => {
     if (lastContextRef.current && lastContextRef.current !== lunaContext) {
-      setShowCount(prev => prev + 1);
+      fetchLine(lunaContext);
+      lastContextRef.current = lunaContext;
+      // 操作があったのでidleタイマーリセット
+      resetIdleTimer();
     }
-  }, [lunaContext]);
+  }, [lunaContext, fetchLine, resetIdleTimer]);
+
+  // ユーザー操作でidleタイマーリセット
+  useEffect(() => {
+    const handleActivity = () => {
+      resetIdleTimer();
+    };
+
+    window.addEventListener('click', handleActivity);
+    window.addEventListener('keydown', handleActivity);
+    window.addEventListener('touchstart', handleActivity);
+
+    return () => {
+      window.removeEventListener('click', handleActivity);
+      window.removeEventListener('keydown', handleActivity);
+      window.removeEventListener('touchstart', handleActivity);
+    };
+  }, [resetIdleTimer]);
 
   // クリーンアップ
   useEffect(() => {
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
+      }
+      if (idleTimerRef.current) {
+        clearTimeout(idleTimerRef.current);
       }
     };
   }, []);
