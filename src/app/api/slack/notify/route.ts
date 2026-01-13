@@ -1,8 +1,10 @@
 // ===========================================
-// Slack通知 API（Vercel Cron用）
+// Slack通知 API（Cloudflare Cron用）
 // GET /api/slack/notify?context=morning|midday|evening
 // ルナからの定時リマインドをSlackに送信
 // ===========================================
+
+export const runtime = 'edge';
 
 import { NextResponse } from 'next/server';
 import { GoogleGenAI, ThinkingLevel } from '@google/genai';

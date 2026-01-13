@@ -1,0 +1,8 @@
+# Cloudflare Pages設定
+name = "smtd"
+pages_build_output_dir = ".vercel/output/static"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# 環境変数はCloudflare Dashboardで設定

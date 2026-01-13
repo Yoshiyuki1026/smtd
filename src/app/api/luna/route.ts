@@ -4,6 +4,8 @@
 // 新SDK: @google/genai + thinkingLevel: MINIMAL
 // ===========================================
 
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 import type { LunaMode, LunaContext } from '@/types';
