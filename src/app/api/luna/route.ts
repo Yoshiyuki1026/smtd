@@ -13,8 +13,11 @@ const API_KEY = process.env.GEMINI_API_KEY || '';
 // Gemini クライアント初期化
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
-// モデル設定（Gemini 2.0 Flash - 高速版）
-const MODEL_NAME = 'gemini-2.0-flash';
+// モデル設定
+// - gemini-2.5-flash: 安定版、7秒程度
+// - gemini-2.5-flash-lite: さらに高速・低コスト
+// - gemini-3-flash-preview: 最新だが12秒程度
+const MODEL_NAME = 'gemini-2.5-flash';
 
 // キャッシュ（メモリ内、5分間有効）
 const lineCache = new Map<string, { line: string; timestamp: number }>();
