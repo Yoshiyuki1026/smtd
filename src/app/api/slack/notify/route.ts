@@ -10,7 +10,8 @@ import type { SlackContext } from '@/types';
 
 // 環境変数
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || '';
+const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN || '';
+const SLACK_CHANNEL = process.env.SLACK_CHANNEL || '#claude-code';
 const CRON_SECRET = process.env.CRON_SECRET || '';
 
 // Gemini クライアント
@@ -64,24 +65,33 @@ function getRandomFromArray<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// Slack送信
+// Slack送信（Bot Token + chat.postMessage API）
 async function sendToSlack(message: string): Promise<boolean> {
-  if (!SLACK_WEBHOOK_URL) {
-    console.warn('SLACK_WEBHOOK_URL not set');
+  if (!SLACK_BOT_TOKEN) {
+    console.warn('SLACK_BOT_TOKEN not set');
     return false;
   }
 
   try {
-    const response = await fetch(SLACK_WEBHOOK_URL, {
+    const response = await fetch('https://slack.com/api/chat.postMessage', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SLACK_BOT_TOKEN}`,
+      },
       body: JSON.stringify({
+        channel: SLACK_CHANNEL,
         text: `◈ ${message}`,
         username: 'ルナ',
         icon_emoji: ':sparkles:',
       }),
     });
-    return response.ok;
+    const data = await response.json();
+    if (!data.ok) {
+      console.error('Slack API error:', data.error);
+      return false;
+    }
+    return true;
   } catch (error) {
     console.error('Slack send error:', error);
     return false;
