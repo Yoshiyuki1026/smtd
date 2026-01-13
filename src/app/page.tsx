@@ -2,8 +2,7 @@
 
 // ===========================================
 // SMTD メイン画面（Cockpit）
-// 仕様書 v1.2 準拠
-// Codename: The Black Odyssey
+// ジョブズ版: シンプル、本質的、直感的
 // ===========================================
 
 import { useEffect } from 'react';
@@ -11,7 +10,8 @@ import { useTaskStore } from '@/stores/taskStore';
 import { FocusSection } from '@/components/FocusSection';
 import { BacklogSection } from '@/components/BacklogSection';
 import { GoalCounter } from '@/components/GoalCounter';
-import { LunaToast } from '@/components/LunaToast';
+import { TaskInput } from '@/components/TaskInput';
+import { LunaBar } from '@/components/LunaBar';
 import { RewardEffect } from '@/components/RewardEffect';
 import { ProcrastinationBreakthrough } from '@/components/ProcrastinationBreakthrough';
 
@@ -35,42 +35,36 @@ export default function Home() {
       {/* 報酬演出 */}
       <RewardEffect />
 
-      {/* ルナのトースト */}
-      <LunaToast />
-
       {/* 先延ばしブレイクスルー */}
       <ProcrastinationBreakthrough />
 
-      <main className="mx-auto max-w-lg px-4 py-8">
-        {/* ヘッダー */}
+      {/* ルナバー（画面下部固定） */}
+      <LunaBar />
+
+      <main className="mx-auto max-w-lg px-4 py-8 pb-24">
+        {/* ヘッダー: タイトル + ゴールカウンター */}
         <header className="mb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-3xl font-bold tracking-tight mb-2">
             <span className="text-rust-gradient">
               すたどら
             </span>
           </h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            3つ終わればゴール。シンプルに。
-          </p>
+          {/* ゴールカウンター（ヘッダー統合） */}
+          <GoalCounter />
         </header>
 
         {/* 今やること（フォーカスエリア） */}
         <FocusSection />
 
-        {/* ゴールカウンター */}
-        <section className="mb-6">
-          <GoalCounter />
-        </section>
+        {/* タスク追加（常時表示） */}
+        <TaskInput />
 
-        {/* 控え室（バックログ） */}
+        {/* 控え室（折りたたみ式） */}
         <BacklogSection />
 
         {/* フッター */}
         <footer className="mt-12 text-center text-xs text-zinc-600">
-          <p>Supermassive Task Drive v0.2.0</p>
-          <p className="mt-1">
-            「お前の脳は壊れてない。ツールが壊れてるんだ。」
-          </p>
+          <p>Supermassive Task Drive v0.3.0</p>
         </footer>
       </main>
     </div>

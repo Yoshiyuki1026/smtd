@@ -36,6 +36,7 @@ interface TaskStore {
   // ルナ
   lunaMode: LunaMode;
   lunaContext: LunaContext;
+  lunaTaskTitle: string | null;  // コンテキストに関連するタスク名
   currentLine: string;
   setLunaState: (mode: LunaMode, context: LunaContext, line: string) => void;
 
@@ -121,15 +122,18 @@ export const useTaskStore = create<TaskStore>()(
           },
           lunaMode: 'standard',
           lunaContext: 'success',
+          lunaTaskTitle: task.title,  // タスク名を保存
           lastReward: { points, combo: newCombo },
         });
       },
 
       deleteTask: (id: string) => {
         const { tasks } = get();
+        const task = tasks.find((t) => t.id === id);
 
         set({
           tasks: tasks.filter((t) => t.id !== id),
+          lunaTaskTitle: task?.title || null,  // タスク名を保存
           lunaMode: 'entertained',
           lunaContext: 'failure',
         });
@@ -172,6 +176,7 @@ export const useTaskStore = create<TaskStore>()(
       // ===========================================
       lunaMode: 'standard',
       lunaContext: 'ignition',
+      lunaTaskTitle: null,
       currentLine: '',
 
       setLunaState: (mode, context, line) => {

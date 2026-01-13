@@ -83,10 +83,10 @@ export function ProcrastinationBreakthrough() {
       {/* トリガーボタン */}
       <button
         onClick={handleOpen}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-amber-500/20 border border-amber-500/40 px-4 py-3 text-amber-400 hover:bg-amber-500/30 transition-all shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+        className="fixed bottom-28 right-4 z-40 flex items-center gap-2 rounded-full bg-amber-500/20 border border-amber-500/40 px-4 py-3 text-amber-400 hover:bg-amber-500/30 transition-all shadow-[0_0_20px_rgba(245,158,11,0.2)]"
       >
         <span className="text-lg">⚡</span>
-        <span className="text-sm font-medium">先延ばし？</span>
+        <span className="text-sm font-medium">何か先延ばししてない？</span>
       </button>
 
       {/* モーダル */}

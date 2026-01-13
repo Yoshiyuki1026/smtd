@@ -9,12 +9,11 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTaskStore } from '@/stores/taskStore';
-import { ArrowUp, Trash2, ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { ArrowUp, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 
 export function BacklogSection() {
-  const { tasks, addTask, focusTask, deleteTask } = useTaskStore();
-  const [isOpen, setIsOpen] = useState(true);
-  const [inputValue, setInputValue] = useState('');
+  const { tasks, focusTask, deleteTask } = useTaskStore();
+  const [isOpen, setIsOpen] = useState(false);
 
   // 控え室のタスク（focused=false かつ 未完了）
   const backlogTasks = tasks.filter((t) => !t.focused && !t.completed);
@@ -22,14 +21,6 @@ export function BacklogSection() {
   // フォーカス中の数（3つ制限チェック用）
   const focusedCount = tasks.filter((t) => t.focused && !t.completed).length;
   const canFocus = focusedCount < 3;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputValue.trim()) return;
-
-    addTask(inputValue.trim());
-    setInputValue('');
-  };
 
   return (
     <section className="mb-6">
@@ -57,27 +48,6 @@ export function BacklogSection() {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            {/* タスク入力 */}
-            <form onSubmit={handleSubmit} className="mb-3">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="新しいタスクを追加..."
-                  className="flex-1 rounded-lg bg-zinc-900 border border-zinc-700/50 px-4 py-2 text-zinc-100 placeholder-zinc-600 focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/30"
-                />
-                <button
-                  type="submit"
-                  disabled={!inputValue.trim()}
-                  className="btn-steel flex h-10 w-10 items-center justify-center rounded-lg text-amber-500 transition-colors hover:text-amber-400 disabled:opacity-30 disabled:cursor-not-allowed"
-                  aria-label="追加"
-                >
-                  <Plus size={20} />
-                </button>
-              </div>
-            </form>
-
             {/* タスク一覧 */}
             <div className="space-y-2">
               <AnimatePresence mode="popLayout">
@@ -90,15 +60,15 @@ export function BacklogSection() {
                     exit={{ opacity: 0, x: 20 }}
                     className="group flex items-center gap-3 rounded-lg bg-zinc-900/50 border border-zinc-800 px-4 py-3"
                   >
-                    {/* 今やることに昇格ボタン */}
+                    {/* 今やることに昇格ボタン（タッチターゲット最適化: 40px） */}
                     <button
                       onClick={() => focusTask(task.id)}
                       disabled={!canFocus}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-amber-500 transition-all hover:bg-amber-500/20 disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-amber-500 transition-all hover:bg-amber-500/20 disabled:opacity-30 disabled:cursor-not-allowed focus:ring-2 focus:ring-amber-400"
                       aria-label="今やることに追加"
                       title={canFocus ? '今やることに追加' : '3つまで'}
                     >
-                      <ArrowUp size={16} />
+                      <ArrowUp size={20} />
                     </button>
 
                     {/* タスク名 */}
@@ -106,13 +76,13 @@ export function BacklogSection() {
                       {task.title}
                     </span>
 
-                    {/* 削除ボタン */}
+                    {/* 削除ボタン（タッチターゲット最適化: 40px） */}
                     <button
                       onClick={() => deleteTask(task.id)}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg text-zinc-600 opacity-0 transition-all hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100"
+                      className="flex h-10 w-10 items-center justify-center rounded-lg text-zinc-600 opacity-0 transition-all hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100 focus:ring-2 focus:ring-amber-400"
                       aria-label="削除"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={18} />
                     </button>
                   </motion.div>
                 ))}

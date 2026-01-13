@@ -1,48 +1,43 @@
 'use client';
 
 // ===========================================
-// LunaToast - ルナのセリフ（トースト表示）
+// LunaBar - ルナのセリフ（画面下部固定）
 // Industrial Noir Theme
-// ルナ: シアン/ターコイズ（天才肌のデジタル感）
+// ジョブズ版: 常時表示、Dock的存在感
 // ===========================================
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useTaskStore } from '@/stores/taskStore';
 import type { LunaContext } from '@/types';
-
-// エラー時のメッセージ
-const ERROR_MESSAGE = '...（ちょっと待って）';
 
 // idle発火までの時間（5分）
 const IDLE_TIMEOUT = 5 * 60 * 1000;
 
-export function LunaToast() {
-  const { lunaContext, lunaMode } = useTaskStore();
-  const [visible, setVisible] = useState(false);
+export function LunaBar() {
+  const { lunaContext, lunaMode, lunaTaskTitle } = useTaskStore();
+  const [mounted, setMounted] = useState(false);
   const [currentLine, setCurrentLine] = useState('...');
   const [isLoading, setIsLoading] = useState(false);
   const lastContextRef = useRef<string | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasFiredIdleRef = useRef(false);
 
-  // セリフを取得（API完了後にタイマー開始）
-  const fetchLine = useCallback(async (context: LunaContext) => {
-    setIsLoading(true);
-    setVisible(true);
-    setCurrentLine('...');
+  // Hydration対策: クライアント側でのみレンダリング
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-    // 既存のタイマーをクリア
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-    }
+  // セリフを取得
+  const fetchLine = useCallback(async (context: LunaContext, taskTitle?: string | null) => {
+    setIsLoading(true);
+    setCurrentLine('...');
 
     try {
       const response = await fetch('/api/luna', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: lunaMode, context }),
+        body: JSON.stringify({ mode: lunaMode, context, taskTitle }),
       });
 
       if (response.ok) {
@@ -50,21 +45,16 @@ export function LunaToast() {
         if (data.line && data.source !== 'error') {
           setCurrentLine(data.line);
         } else {
-          // エラーの場合はフォールバック
-          setCurrentLine(ERROR_MESSAGE);
+          setCurrentLine('...（ちょっと待って）');
         }
       } else {
-        setCurrentLine(ERROR_MESSAGE);
+        setCurrentLine('...（ちょっと待って）');
       }
     } catch (error) {
       console.error('Failed to fetch Luna line:', error);
-      setCurrentLine(ERROR_MESSAGE);
+      setCurrentLine('...（ちょっと待って）');
     } finally {
       setIsLoading(false);
-      // API完了後に8秒タイマー開始
-      timerRef.current = setTimeout(() => {
-        setVisible(false);
-      }, 8000);
     }
   }, [lunaMode]);
 
@@ -82,38 +72,31 @@ export function LunaToast() {
     }, IDLE_TIMEOUT);
   }, [fetchLine]);
 
-  // 初回マウント時（bond: 深夜0-5時）
+  // 初回マウント時
   useEffect(() => {
     const hour = new Date().getHours();
     const initialContext: LunaContext = (hour >= 0 && hour < 5) ? 'bond' : 'ignition';
     fetchLine(initialContext);
     lastContextRef.current = initialContext;
-
-    // idleタイマー開始
     resetIdleTimer();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // コンテキスト変更時（初回以降）
+  // コンテキスト変更時
   useEffect(() => {
     if (lastContextRef.current && lastContextRef.current !== lunaContext) {
-      fetchLine(lunaContext);
+      fetchLine(lunaContext, lunaTaskTitle);
       lastContextRef.current = lunaContext;
-      // 操作があったのでidleタイマーリセット
       resetIdleTimer();
     }
-  }, [lunaContext, fetchLine, resetIdleTimer]);
+  }, [lunaContext, lunaTaskTitle, fetchLine, resetIdleTimer]);
 
   // ユーザー操作でidleタイマーリセット
   useEffect(() => {
-    const handleActivity = () => {
-      resetIdleTimer();
-    };
-
+    const handleActivity = () => resetIdleTimer();
     window.addEventListener('click', handleActivity);
     window.addEventListener('keydown', handleActivity);
     window.addEventListener('touchstart', handleActivity);
-
     return () => {
       window.removeEventListener('click', handleActivity);
       window.removeEventListener('keydown', handleActivity);
@@ -124,41 +107,39 @@ export function LunaToast() {
   // クリーンアップ
   useEffect(() => {
     return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
       if (idleTimerRef.current) {
         clearTimeout(idleTimerRef.current);
       }
     };
   }, []);
 
-  // ルナ: シアン、Entertained: アンバー（嘲笑モード）
-  const toastStyle = lunaMode === 'entertained'
-    ? 'bg-amber-500/10 border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.15)]'
-    : 'bg-cyan-500/10 border-cyan-500/40 shadow-[0_0_20px_rgba(6,182,212,0.15)]';
+  // スタイル
+  const barStyle = lunaMode === 'entertained'
+    ? 'bg-amber-500/10 border-amber-500/30'
+    : 'bg-cyan-500/10 border-cyan-500/30';
 
   const iconColor = lunaMode === 'entertained' ? '⚡' : '◈';
+  const textColor = lunaMode === 'entertained' ? 'text-amber-400' : 'text-cyan-400';
+
+  // マウント前は何も表示しない（SSR対策）
+  if (!mounted) return null;
 
   return (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          initial={{ opacity: 0, y: -20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -20, scale: 0.95 }}
-          className={`fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded-lg border px-6 py-3 backdrop-blur-md max-w-md ${toastStyle}`}
-        >
-          <div className="flex items-center gap-3">
-            <span className={`text-lg shrink-0 ${lunaMode === 'entertained' ? 'text-amber-400' : 'text-cyan-400'}`}>
-              {iconColor}
-            </span>
-            <span className={`text-zinc-100 font-medium tracking-wide text-sm ${isLoading ? 'animate-pulse' : ''}`}>
-              {currentLine}
-            </span>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`fixed bottom-0 left-0 right-0 z-50 border-t backdrop-blur-md ${barStyle}`}
+    >
+      <div className="mx-auto max-w-lg px-4 py-3">
+        <div className="flex items-center gap-3">
+          <span className={`text-lg shrink-0 ${textColor}`}>
+            {iconColor}
+          </span>
+          <span className={`text-zinc-100 font-medium tracking-wide text-sm ${isLoading ? 'animate-pulse' : ''}`}>
+            {currentLine}
+          </span>
+        </div>
+      </div>
+    </motion.div>
   );
 }
