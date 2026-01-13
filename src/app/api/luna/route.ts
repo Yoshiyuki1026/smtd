@@ -1,30 +1,26 @@
 // ===========================================
 // Luna セリフ生成 API
 // POST /api/luna
+// 新SDK: @google/genai + thinkingLevel: MINIMAL
 // ===========================================
 
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 import type { LunaMode, LunaContext } from '@/types';
 
 // APIキーはサーバーサイドの環境変数から取得
 const API_KEY = process.env.GEMINI_API_KEY || '';
 
-// Gemini クライアント初期化
-const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
+// Gemini クライアント初期化（新SDK）
+const genAI = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 
 // モデル設定
-// - gemini-2.5-flash: 安定版、7秒程度
-// - gemini-2.5-flash-lite: さらに高速・低コスト
-// - gemini-3-flash-preview: 最新だが12秒程度
-const MODEL_NAME = 'gemini-2.5-flash';
+// - gemini-3-flash-preview + thinkingLevel: MINIMAL で最速
+const MODEL_NAME = 'gemini-3-flash-preview';
 
 // キャッシュ（メモリ内、5分間有効）
 const lineCache = new Map<string, { line: string; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5分
-
-// APIタイムアウト（10秒）
-const API_TIMEOUT = 10000;
 
 // プロンプトテンプレート
 const SYSTEM_PROMPT = `あなたは「ルナ」というキャラクターです。
@@ -104,8 +100,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ line: fallbackLine, source: 'fallback' });
     }
 
-    const model = genAI.getGenerativeModel({ model: MODEL_NAME });
-
     // 時刻情報
     const now = new Date();
     const hour = now.getHours();
@@ -125,43 +119,29 @@ export async function POST(request: Request) {
 
     userPrompt += `\n\n【指示】\n${CONTEXT_PROMPTS[context]}`;
 
-    // タイムアウト付きAPI呼び出し
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+    // 新SDK: thinkingLevel: MINIMAL で最速モード
+    const result = await genAI.models.generateContent({
+      model: MODEL_NAME,
+      contents: `${SYSTEM_PROMPT}\n\n${userPrompt}`,
+      config: {
+        thinkingConfig: {
+          thinkingLevel: ThinkingLevel.MINIMAL,
+        },
+      },
+    });
 
-    try {
-      const result = await model.generateContent([
-        { text: SYSTEM_PROMPT },
-        { text: userPrompt },
-      ]);
+    const text = result.text?.trim() || '';
 
-      clearTimeout(timeoutId);
-
-      const response = result.response;
-      const text = response.text().trim();
-
-      // 空の場合はフォールバック
-      if (!text) {
-        const fallbackLine = getRandomFromArray(FALLBACK_LINES[context] || FALLBACK_LINES.idle);
-        return NextResponse.json({ line: fallbackLine, source: 'fallback' });
-      }
-
-      // キャッシュに保存
-      lineCache.set(cacheKey, { line: text, timestamp: Date.now() });
-
-      return NextResponse.json({ line: text, source: 'gemini' });
-    } catch (apiError) {
-      clearTimeout(timeoutId);
-
-      // タイムアウトの場合
-      if (apiError instanceof Error && apiError.name === 'AbortError') {
-        console.warn('Gemini API timeout, using fallback');
-        const fallbackLine = getRandomFromArray(FALLBACK_LINES[context] || FALLBACK_LINES.idle);
-        return NextResponse.json({ line: fallbackLine, source: 'timeout' });
-      }
-
-      throw apiError;
+    // 空の場合はフォールバック
+    if (!text) {
+      const fallbackLine = getRandomFromArray(FALLBACK_LINES[context] || FALLBACK_LINES.idle);
+      return NextResponse.json({ line: fallbackLine, source: 'fallback' });
     }
+
+    // キャッシュに保存
+    lineCache.set(cacheKey, { line: text, timestamp: Date.now() });
+
+    return NextResponse.json({ line: text, source: 'gemini' });
   } catch (error) {
     console.error('Gemini API error:', error);
     // 接続エラーの場合は特別なメッセージ
