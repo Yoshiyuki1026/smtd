@@ -11,39 +11,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTaskStore } from '@/stores/taskStore';
 import type { LunaContext } from '@/types';
 
-// フォールバック用の静的セリフ（API失敗時のみ使用）
-const FALLBACK_LINES: Record<LunaContext, string[]> = {
-  ignition: [
-    'おはよ。今日も走るで？まあ、あんたのペースでええけん、ぼちぼちやっていこか。',
-    'エンジン、かかっとるで。準備できたら教えてな、私も見とくけん。',
-  ],
-  success: [
-    'やるやん。ちょっと見直したわ。まあ、私が見とったけん当然やけどな。',
-    'ええセンスしとるな。この調子でいけば、今日は勝ち越しやで。',
-  ],
-  failure: [
-    'あはは、やめたんか。まあええけど、ダサい負け方だけはせんといてな。',
-    'サボりも休憩のうちやで。無理せんと、またやりたなった時にやればええ。',
-  ],
-  idle: [
-    '暇なんか？まあ、ゆっくりしとってもええけど、私は待っとるけんな。',
-    'なんかせえへんの？別にせかしとるわけやないけど、気が向いたらな。',
-  ],
-  bond: [
-    'こんな時間までおるん？無理せんでええんやで。私はいつでもおるけん。',
-    '遅くまでようやっとるな。でも、身体壊したら元も子もないで。',
-  ],
-};
-
-const getRandomLine = (context: LunaContext): string => {
-  const lines = FALLBACK_LINES[context];
-  return lines[Math.floor(Math.random() * lines.length)];
-};
+// エラー時のメッセージ
+const ERROR_MESSAGE = '...（ちょっと待って）';
 
 export function LunaToast() {
   const { lunaContext, lunaMode } = useTaskStore();
   const [visible, setVisible] = useState(false);
-  const [currentLine, setCurrentLine] = useState('');
+  const [currentLine, setCurrentLine] = useState('...');
   const [isLoading, setIsLoading] = useState(false);
   const [showCount, setShowCount] = useState(0);
   const lastContextRef = useRef<string | null>(null);
@@ -73,14 +47,14 @@ export function LunaToast() {
           setCurrentLine(data.line);
         } else {
           // エラーの場合はフォールバック
-          setCurrentLine(getRandomLine(context));
+          setCurrentLine(ERROR_MESSAGE);
         }
       } else {
-        setCurrentLine(getRandomLine(context));
+        setCurrentLine(ERROR_MESSAGE);
       }
     } catch (error) {
       console.error('Failed to fetch Luna line:', error);
-      setCurrentLine(getRandomLine(context));
+      setCurrentLine(ERROR_MESSAGE);
     } finally {
       setIsLoading(false);
       // API完了後に8秒タイマー開始
