@@ -2,14 +2,23 @@
 
 // ===========================================
 // RewardEffect - 報酬演出
-// 仕様書 v1.1 準拠
-// 紙吹雪 + ポイント弾け飛び + コンボ
+// Industrial Noir Theme
+// 紙吹雪（アンバー系） + ポイント弾け飛び + コンボ
 // ===========================================
 
 import { useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { useTaskStore } from '@/stores/taskStore';
+
+// Industrial Noir カラーパレット
+const CONFETTI_COLORS = [
+  '#fbbf24', // amber-400
+  '#f59e0b', // amber-500
+  '#d97706', // amber-600
+  '#fef3c7', // amber-100 (light spark)
+  '#78350f', // amber-900 (dark ember)
+];
 
 export function RewardEffect() {
   const { lastReward, clearReward } = useTaskStore();
@@ -20,6 +29,7 @@ export function RewardEffect() {
     const defaults = {
       origin: { y: 0.7 },
       zIndex: 9999,
+      colors: CONFETTI_COLORS,
     };
 
     const fire = (particleRatio: number, opts: confetti.Options) => {
@@ -90,7 +100,7 @@ export function RewardEffect() {
               initial={{ scale: 0 }}
               animate={{ scale: [0, 1.2, 1] }}
               transition={{ duration: 0.5 }}
-              className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500"
+              className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-500 to-orange-600 drop-shadow-[0_0_30px_rgba(245,158,11,0.5)]"
             >
               +{lastReward.points.toLocaleString()}
             </motion.div>
@@ -101,7 +111,7 @@ export function RewardEffect() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="mt-2 text-2xl font-bold text-orange-400"
+                className="mt-2 text-2xl font-bold text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]"
               >
                 🔥 {lastReward.combo}x COMBO!
               </motion.div>

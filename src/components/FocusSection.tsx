@@ -39,13 +39,13 @@ export function FocusSection() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="group relative rounded-xl bg-zinc-800/80 border border-zinc-700/50 p-4"
+              className="group relative rounded-lg border-industrial bg-zinc-900/80 p-4"
             >
               <div className="flex items-center gap-3">
                 {/* 完了ボタン */}
                 <button
                   onClick={() => completeTask(task.id)}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-purple-500 text-purple-500 transition-all hover:bg-purple-500 hover:text-white"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full ring-amber text-amber-500 transition-all hover:text-black"
                   aria-label="タスクを完了"
                 >
                   <Check size={16} />

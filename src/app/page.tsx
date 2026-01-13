@@ -41,7 +41,7 @@ export default function Home() {
         {/* ヘッダー */}
         <header className="mb-8 text-center">
           <h1 className="text-3xl font-bold tracking-tight">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">
+            <span className="text-rust-gradient">
               すたどら
             </span>
           </h1>

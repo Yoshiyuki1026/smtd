@@ -2,7 +2,7 @@
 
 // ===========================================
 // BacklogSection - 控え室エリア
-// 仕様書 v1.2 準拠
+// Industrial Noir Theme
 // 無制限タスク登録、折り畳み可能
 // ===========================================
 
@@ -65,12 +65,12 @@ export function BacklogSection() {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   placeholder="新しいタスクを追加..."
-                  className="flex-1 rounded-lg bg-zinc-800 border border-zinc-700 px-4 py-2 text-zinc-100 placeholder-zinc-500 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  className="flex-1 rounded-lg bg-zinc-900 border border-zinc-700/50 px-4 py-2 text-zinc-100 placeholder-zinc-600 focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/30"
                 />
                 <button
                   type="submit"
                   disabled={!inputValue.trim()}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-600 text-white transition-colors hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-steel flex h-10 w-10 items-center justify-center rounded-lg text-amber-500 transition-colors hover:text-amber-400 disabled:opacity-30 disabled:cursor-not-allowed"
                   aria-label="追加"
                 >
                   <Plus size={20} />
@@ -88,13 +88,13 @@ export function BacklogSection() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
-                    className="group flex items-center gap-3 rounded-lg bg-zinc-800/50 border border-zinc-700/30 px-4 py-3"
+                    className="group flex items-center gap-3 rounded-lg bg-zinc-900/50 border border-zinc-800 px-4 py-3"
                   >
                     {/* 今やることに昇格ボタン */}
                     <button
                       onClick={() => focusTask(task.id)}
                       disabled={!canFocus}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-purple-400 transition-all hover:bg-purple-500/20 disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-amber-500 transition-all hover:bg-amber-500/20 disabled:opacity-30 disabled:cursor-not-allowed"
                       aria-label="今やることに追加"
                       title={canFocus ? '今やることに追加' : '3つまで'}
                     >
@@ -109,7 +109,7 @@ export function BacklogSection() {
                     {/* 削除ボタン */}
                     <button
                       onClick={() => deleteTask(task.id)}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg text-zinc-500 opacity-0 transition-all hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-zinc-600 opacity-0 transition-all hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100"
                       aria-label="削除"
                     >
                       <Trash2 size={14} />
@@ -119,7 +119,7 @@ export function BacklogSection() {
               </AnimatePresence>
 
               {backlogTasks.length === 0 && (
-                <div className="rounded-lg border border-dashed border-zinc-700/50 p-4 text-center text-sm text-zinc-600">
+                <div className="rounded-lg border border-dashed border-zinc-800 p-4 text-center text-sm text-zinc-600">
                   控え室は空です
                 </div>
               )}

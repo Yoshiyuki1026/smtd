@@ -2,8 +2,8 @@
 
 // ===========================================
 // LunaToast - ルナのセリフ（トースト表示）
-// 仕様書 v1.4 準拠
-// Gemini API でセリフを動的生成
+// Industrial Noir Theme
+// ルナ: シアン/ターコイズ（天才肌のデジタル感）
 // ===========================================
 
 import { useEffect, useState, useRef, useCallback } from 'react';
@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTaskStore } from '@/stores/taskStore';
 import type { LunaContext } from '@/types';
 
-// フォールバック用の静的セリフ（API呼び出し前・エラー時）
+// フォールバック用の静的セリフ
 const FALLBACK_LINES: Record<LunaContext, string[]> = {
   ignition: ['おはよ。今日も走るで？', 'エンジン、かかっとるで。', 'ほな、始めよか。'],
   success: ['やるやん。ちょっと見直したわ。', 'ええセンスしとるな。', 'おお、できたやん。'],
@@ -20,7 +20,6 @@ const FALLBACK_LINES: Record<LunaContext, string[]> = {
   bond: ['こんな時間までおるん？', '無理せんでええんやで。', '私はおるから。'],
 };
 
-// ランダムにセリフを選択
 const getRandomLine = (context: LunaContext): string => {
   const lines = FALLBACK_LINES[context];
   return lines[Math.floor(Math.random() * lines.length)];
@@ -31,13 +30,14 @@ export function LunaToast() {
   const [visible, setVisible] = useState(false);
   const [currentLine, setCurrentLine] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const prevContextRef = useRef<LunaContext | null>(null);
+  const [showCount, setShowCount] = useState(0); // トリガー用
+  const lastContextRef = useRef<string | null>(null);
 
-  // セリフを取得（APIまたはフォールバック）
+  // セリフを取得
   const fetchLine = useCallback(async (context: LunaContext) => {
     setIsLoading(true);
 
-    // まずフォールバックを表示（即座に反応）
+    // フォールバックを即表示
     const fallback = getRandomLine(context);
     setCurrentLine(fallback);
     setVisible(true);
@@ -46,47 +46,54 @@ export function LunaToast() {
       const response = await fetch('/api/luna', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mode: lunaMode,
-          context,
-        }),
+        body: JSON.stringify({ mode: lunaMode, context }),
       });
 
       if (response.ok) {
         const data = await response.json();
         if (data.line && data.source !== 'error') {
-          // API成功時は置き換え
           setCurrentLine(data.line);
         }
       }
     } catch (error) {
-      // エラー時はフォールバックのまま
       console.error('Failed to fetch Luna line:', error);
     } finally {
       setIsLoading(false);
     }
   }, [lunaMode]);
 
+  // 初回マウント時
   useEffect(() => {
-    // コンテキストが変わったらトースト表示
-    if (prevContextRef.current !== lunaContext) {
-      fetchLine(lunaContext);
+    setShowCount(1);
+  }, []);
 
-      // 4秒後に消える（API待ち時間を考慮して長めに）
-      const timer = setTimeout(() => {
-        setVisible(false);
-      }, 4000);
+  // showCountが変わったらトースト表示
+  useEffect(() => {
+    if (showCount === 0) return;
 
-      prevContextRef.current = lunaContext;
+    fetchLine(lunaContext);
+    lastContextRef.current = lunaContext;
 
-      return () => clearTimeout(timer);
+    const timer = setTimeout(() => {
+      setVisible(false);
+    }, 8000);
+
+    return () => clearTimeout(timer);
+  }, [showCount, fetchLine, lunaContext]);
+
+  // コンテキスト変更時（初回以降）
+  useEffect(() => {
+    if (lastContextRef.current && lastContextRef.current !== lunaContext) {
+      setShowCount(prev => prev + 1);
     }
-  }, [lunaContext, fetchLine]);
+  }, [lunaContext]);
 
-  // entertainedモードの時は背景色を変える
-  const bgColor = lunaMode === 'entertained'
-    ? 'bg-pink-500/20 border-pink-500/50'
-    : 'bg-purple-500/20 border-purple-500/50';
+  // ルナ: シアン、Entertained: アンバー（嘲笑モード）
+  const toastStyle = lunaMode === 'entertained'
+    ? 'bg-amber-500/10 border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.15)]'
+    : 'bg-cyan-500/10 border-cyan-500/40 shadow-[0_0_20px_rgba(6,182,212,0.15)]';
+
+  const iconColor = lunaMode === 'entertained' ? '⚡' : '◈';
 
   return (
     <AnimatePresence>
@@ -95,11 +102,13 @@ export function LunaToast() {
           initial={{ opacity: 0, y: -20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.95 }}
-          className={`fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded-xl border px-6 py-3 backdrop-blur-sm ${bgColor}`}
+          className={`fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded-lg border px-6 py-3 backdrop-blur-md ${toastStyle}`}
         >
-          <div className="flex items-center gap-2">
-            <span className="text-lg">🌙</span>
-            <span className={`text-zinc-100 font-medium ${isLoading ? 'opacity-70' : ''}`}>
+          <div className="flex items-center gap-3">
+            <span className={`text-lg ${lunaMode === 'entertained' ? 'text-amber-400' : 'text-cyan-400'}`}>
+              {iconColor}
+            </span>
+            <span className={`text-zinc-100 font-medium tracking-wide ${isLoading ? 'opacity-70' : ''}`}>
               {currentLine}
             </span>
           </div>
