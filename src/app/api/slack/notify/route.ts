@@ -15,6 +15,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN || '';
 const SLACK_CHANNEL = process.env.SLACK_CHANNEL || '#claude-code';
 const CRON_SECRET = process.env.CRON_SECRET || '';
+const APP_URL = 'https://smtd.neuro-ronin.com';
 
 // Gemini クライアント
 const genAI = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null;
@@ -83,7 +84,7 @@ async function sendToSlack(message: string): Promise<boolean> {
       },
       body: JSON.stringify({
         channel: SLACK_CHANNEL,
-        text: `◈ ${message}`,
+        text: `◈ ${message}\n\n<${APP_URL}|すたどらを開く>`,
         username: 'ルナ',
         icon_emoji: ':sparkles:',
       }),
