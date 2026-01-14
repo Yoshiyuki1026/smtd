@@ -8,7 +8,8 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Plus } from 'lucide-react';
+import { useTaskStore } from '@/stores/taskStore';
 
 type Step = 1 | 2 | 3;
 
@@ -16,6 +17,8 @@ export function Onboarding() {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [isMounted, setIsMounted] = useState(false);
+  const [taskInput, setTaskInput] = useState('');
+  const { addTask } = useTaskStore();
 
   // Hydration対策: クライアント側でのみレンダリング
   // eslint-disable react-hooks/exhaustive-deps
@@ -52,8 +55,8 @@ export function Onboarding() {
     1: {
       title: 'タスクを追加してみよう',
       description:
-        'まずは「タスクを追加...」にやることを入力してみて。今日やりたいことなんでもOK。',
-      hint: '例：パッケージ更新、メール返信、コーヒー飲む',
+        '今日やりたいことを入力してみて。なんでもOK！',
+      hint: '例：買い物、メール返信、部屋の掃除',
       icon: '📝',
       targetElement: 'task-input',
     },
@@ -78,6 +81,15 @@ export function Onboarding() {
     if (currentStep < 3) {
       setCurrentStep((currentStep + 1) as Step);
     }
+  };
+
+  // Step 1: タスク追加 → 自動で次へ
+  const handleAddTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!taskInput.trim()) return;
+    addTask(taskInput.trim());
+    setTaskInput('');
+    handleNext(); // 自動で次のステップへ
   };
 
   const handleSkip = () => {
@@ -153,6 +165,30 @@ export function Onboarding() {
               </div>
             </div>
 
+            {/* Step 1: タスク入力欄 */}
+            {currentStep === 1 && (
+              <form onSubmit={handleAddTask} className="mb-6">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={taskInput}
+                    onChange={(e) => setTaskInput(e.target.value)}
+                    placeholder="やることを入力..."
+                    autoFocus
+                    className="flex-1 rounded-lg bg-zinc-800 border border-zinc-600 px-4 py-3 text-zinc-100 placeholder-zinc-500 focus:border-amber-500/50 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!taskInput.trim()}
+                    className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-500 transition-colors hover:bg-amber-500/30 disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="追加"
+                  >
+                    <Plus size={24} />
+                  </button>
+                </div>
+              </form>
+            )}
+
             {/* ボタン群 */}
             <div className="flex gap-3">
               {/* スキップボタン */}
@@ -188,8 +224,8 @@ export function Onboarding() {
             </div>
           </motion.div>
 
-          {/* ツールチップ（Step 1-2のみ） */}
-          {currentStep < 3 && step.targetElement && (
+          {/* ツールチップ（Step 2のみ、Step 1は入力欄埋め込みなので不要） */}
+          {currentStep === 2 && step.targetElement && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
