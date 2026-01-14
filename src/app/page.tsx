@@ -6,6 +6,7 @@
 // ===========================================
 
 import { useEffect } from 'react';
+import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import { useTaskStore } from '@/stores/taskStore';
 import { FocusSection } from '@/components/FocusSection';
 import { BacklogSection } from '@/components/BacklogSection';
@@ -17,7 +18,17 @@ import { RewardEffect } from '@/components/RewardEffect';
 import { ProcrastinationBreakthrough } from '@/components/ProcrastinationBreakthrough';
 
 export default function Home() {
-  const { checkDateChange } = useTaskStore();
+  const { checkDateChange, focusTask } = useTaskStore();
+
+  // ドラッグ終了時のハンドラ
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    // ドロップ対象が FocusSection の場合
+    if (over?.id === 'focus-droppable') {
+      focusTask(String(active.id));
+    }
+  };
 
   // 起動時に日付変更をチェック
   useEffect(() => {
@@ -32,45 +43,47 @@ export default function Home() {
   }, [checkDateChange]);
 
   return (
-    <div className="min-h-screen bg-black text-zinc-100">
-      {/* 報酬演出 */}
-      <RewardEffect />
+    <DndContext onDragEnd={handleDragEnd}>
+      <div className="min-h-screen bg-black text-zinc-100">
+        {/* 報酬演出 */}
+        <RewardEffect />
 
-      {/* 先延ばしブレイクスルー */}
-      <ProcrastinationBreakthrough />
+        {/* 先延ばしブレイクスルー */}
+        <ProcrastinationBreakthrough />
 
-      {/* ルナバー（画面下部固定） */}
-      <LunaBar />
+        {/* ルナバー（画面下部固定） */}
+        <LunaBar />
 
-      <main className="mx-auto max-w-lg px-4 py-8 pb-24">
-        {/* ヘッダー: タイトル + ゴールカウンター */}
-        <header className="mb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight mb-2">
-            <span className="text-rust-gradient">
-              すたどら
-            </span>
-          </h1>
-          {/* ゴールカウンター（ヘッダー統合） */}
-          <GoalCounter />
-        </header>
+        <main className="mx-auto max-w-lg px-4 py-8 pb-24">
+          {/* ヘッダー: タイトル + ゴールカウンター */}
+          <header className="mb-8 text-center">
+            <h1 className="text-3xl font-bold tracking-tight mb-2">
+              <span className="text-rust-gradient">
+                すたどら
+              </span>
+            </h1>
+            {/* ゴールカウンター（ヘッダー統合） */}
+            <GoalCounter />
+          </header>
 
-        {/* 今やること（フォーカスエリア） */}
-        <FocusSection />
+          {/* 今やること（フォーカスエリア） */}
+          <FocusSection />
 
-        {/* タスク追加（常時表示） */}
-        <TaskInput />
+          {/* タスク追加（常時表示） */}
+          <TaskInput />
 
-        {/* 控え室（折りたたみ式） */}
-        <BacklogSection />
+          {/* 控え室（折りたたみ式） */}
+          <BacklogSection />
 
-        {/* 完了タスク（折りたたみ式） */}
-        <CompletedToday />
+          {/* 完了タスク（折りたたみ式） */}
+          <CompletedToday />
 
-        {/* フッター */}
-        <footer className="mt-12 text-center text-xs text-zinc-600">
-          <p>Supermassive Task Drive v0.3.0</p>
-        </footer>
-      </main>
-    </div>
+          {/* フッター */}
+          <footer className="mt-12 text-center text-xs text-zinc-600">
+            <p>Supermassive Task Drive v0.3.0</p>
+          </footer>
+        </main>
+      </div>
+    </DndContext>
   );
 }
