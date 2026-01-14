@@ -14,6 +14,9 @@ import type { LunaContext } from '@/types';
 // idle発火までの時間（5分）
 const IDLE_TIMEOUT = 5 * 60 * 1000;
 
+// アプリ復帰時のセリフ更新クールダウン（3分）
+const VISIBILITY_COOLDOWN = 3 * 60 * 1000;
+
 export function LunaBar() {
   const { lunaContext, lunaMode, lunaTaskTitle } = useTaskStore();
   const [mounted, setMounted] = useState(false);
@@ -22,6 +25,7 @@ export function LunaBar() {
   const lastContextRef = useRef<string | null>(null);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasFiredIdleRef = useRef(false);
+  const lastFetchTimeRef = useRef<number>(0);  // セリフ取得時刻（クールダウン用）
 
   // Hydration対策: クライアント側でのみレンダリング
   useEffect(() => {
@@ -44,6 +48,7 @@ export function LunaBar() {
         const data = await response.json();
         if (data.line && data.source !== 'error') {
           setCurrentLine(data.line);
+          lastFetchTimeRef.current = Date.now();  // 成功時に時刻記録
         } else {
           setCurrentLine('...（ちょっと待って）');
         }
@@ -103,6 +108,24 @@ export function LunaBar() {
       window.removeEventListener('touchstart', handleActivity);
     };
   }, [resetIdleTimer]);
+
+  // アプリ復帰時（ページ表示時）にセリフ更新（クールダウン付き）
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        const elapsed = Date.now() - lastFetchTimeRef.current;
+        if (elapsed >= VISIBILITY_COOLDOWN) {
+          // クールダウン経過後なら新しいセリフを取得
+          const hour = new Date().getHours();
+          const context: LunaContext = (hour >= 0 && hour < 5) ? 'bond' : 'ignition';
+          fetchLine(context);
+          resetIdleTimer();
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [fetchLine, resetIdleTimer]);
 
   // クリーンアップ
   useEffect(() => {

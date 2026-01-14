@@ -150,12 +150,12 @@ export const useTaskStore = create<TaskStore>()(
       },
 
       checkDateChange: () => {
-        const { gameState, tasks } = get();
+        const { gameState } = get();
         const today = getTodayDate();
 
         if (gameState.todayDate !== today) {
           // 日付が変わった
-          // completedToday, comboをリセット、完了済みタスクを削除
+          // completedToday, comboをリセット（タスクは維持）
           set({
             gameState: {
               ...gameState,
@@ -164,7 +164,7 @@ export const useTaskStore = create<TaskStore>()(
               todayDate: today,
               lastCompletedAt: undefined,
             },
-            tasks: tasks.filter((t) => !t.completed),
+            // タスクは削除しない（完了タスクも維持）
             lunaMode: 'standard',
             lunaContext: 'ignition',
           });
