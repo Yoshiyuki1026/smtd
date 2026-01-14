@@ -7,6 +7,7 @@
 // ===========================================
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { useDroppable } from '@dnd-kit/core';
 import { useTaskStore } from '@/stores/taskStore';
 import { Check, ArrowDown } from 'lucide-react';
 
@@ -19,8 +20,13 @@ export function FocusSection() {
   const focusedTasks = tasks.filter((t) => t.focused && !t.completed);
   const emptySlots = MAX_FOCUS - focusedTasks.length;
 
+  // ドロップ可能エリアの設定
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'focus-droppable',
+  });
+
   return (
-    <section className="mb-6">
+    <section className="mb-6" ref={setNodeRef}>
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-zinc-400">
           今やること
@@ -30,7 +36,11 @@ export function FocusSection() {
         </span>
       </div>
 
-      <div className="space-y-3">
+      <div
+        className={`space-y-3 rounded-lg p-3 transition-colors ${
+          isOver ? 'bg-amber-500/10 border border-amber-500/50' : 'bg-transparent'
+        }`}
+      >
         <AnimatePresence mode="popLayout">
           {focusedTasks.map((task) => (
             <motion.div
