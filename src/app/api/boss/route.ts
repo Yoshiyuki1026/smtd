@@ -70,6 +70,10 @@ const FALLBACK_LINES: Record<LunaContext, string[]> = {
   breakthrough: ['やれやれ、また厄介事か。……やるしかないな。', '……逃げても追いかけてくるぞ、そういうのは。'],
 };
 
+// 入力バリデーション用
+const VALID_MODES = ['standard', 'entertained'] as const;
+const VALID_CONTEXTS = ['ignition', 'success', 'failure', 'idle', 'bond', 'breakthrough'] as const;
+
 // 接続エラー時のメッセージ
 const CONNECTION_ERROR_LINES = [
   '……（通信が途切れた）',
@@ -89,6 +93,12 @@ export async function POST(request: Request) {
       context: LunaContext;
       taskTitle?: string;
     };
+
+    // 入力バリデーション
+    if (!VALID_MODES.includes(mode as typeof VALID_MODES[number]) ||
+        !VALID_CONTEXTS.includes(context as typeof VALID_CONTEXTS[number])) {
+      return NextResponse.json({ error: 'Invalid mode or context' }, { status: 400 });
+    }
 
     // キャッシュキー生成
     const cacheKey = `boss-${mode}-${context}`;
@@ -150,8 +160,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ line: fallbackLine, source: 'fallback' });
     }
 
-    // キャッシュに保存
-    lineCache.set(cacheKey, { line: text, timestamp: Date.now() });
+    // キャッシュに保存（taskTitleがない場合のみ）
+    if (!taskTitle) {
+      lineCache.set(cacheKey, { line: text, timestamp: Date.now() });
+    }
 
     return NextResponse.json({ line: text, source: 'gemini' });
   } catch (error) {

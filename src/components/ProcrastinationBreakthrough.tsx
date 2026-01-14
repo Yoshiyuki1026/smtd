@@ -6,7 +6,7 @@
 // Industrial Noir Theme
 // ===========================================
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTaskStore } from '@/stores/taskStore';
 
@@ -33,6 +33,20 @@ export function ProcrastinationBreakthrough() {
   const handleClose = useCallback(() => {
     setIsOpen(false);
   }, []);
+
+  // Escキーでモーダルを閉じる
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, handleClose]);
 
   // 先延ばし内容を送信
   const handleSubmit = useCallback(async () => {

@@ -25,6 +25,7 @@ export function LunaBar() {
   const [currentLine, setCurrentLine] = useState('...');
   const [isLoading, setIsLoading] = useState(false);
   const lastContextRef = useRef<string | null>(null);
+  const lastNavigatorModeRef = useRef<string>(navigatorMode);  // モード変更検出用
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasFiredIdleRef = useRef(false);
   const lastFetchTimeRef = useRef<number>(0);  // セリフ取得時刻（クールダウン用）
@@ -100,6 +101,18 @@ export function LunaBar() {
       resetIdleTimer();
     }
   }, [lunaContext, lunaTaskTitle, fetchLine, resetIdleTimer]);
+
+  // ナビゲーターモード変更時（CATS⇔DOGS切替で即座にセリフ再取得）
+  useEffect(() => {
+    if (!mounted) return;
+    if (lastNavigatorModeRef.current !== navigatorMode) {
+      lastNavigatorModeRef.current = navigatorMode;
+      const hour = new Date().getHours();
+      const context: LunaContext = (hour >= 0 && hour < 5) ? 'bond' : 'ignition';
+      fetchLine(context);
+      resetIdleTimer();
+    }
+  }, [navigatorMode, mounted, fetchLine, resetIdleTimer]);
 
   // ユーザー操作でidleタイマーリセット
   useEffect(() => {

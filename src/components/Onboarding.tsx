@@ -21,23 +21,18 @@ export function Onboarding() {
   const [taskInput, setTaskInput] = useState('');
   const { addTask } = useTaskStore();
 
-  // Hydration対策: クライアント側でのみレンダリング
-  // eslint-disable react-hooks/exhaustive-deps
+  // Hydration対策: クライアント側でのみレンダリング + localStorageチェック
   useEffect(() => {
-    setIsMounted(true);
+    // React 19 ESLintルール対応: 非同期でsetState
+    queueMicrotask(() => {
+      setIsMounted(true);
+      // 初回起動判定：localStorage に `smtd-onboarding-done` がなければ表示
+      const isDone = localStorage.getItem('smtd-onboarding-done');
+      if (!isDone) {
+        setIsOpen(true);
+      }
+    });
   }, []);
-
-  // isMountedが変更されたら、localStorageをチェックしてisOpenを設定
-  // eslint-disable react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (!isMounted) return;
-
-    // 初回起動判定：localStorage に `smtd-onboarding-done` がなければ表示
-    const isDone = localStorage.getItem('smtd-onboarding-done');
-    if (!isDone) {
-      setIsOpen(true);
-    }
-  }, [isMounted]);
 
   // Hydration 中は何も表示しない
   if (!isMounted) return null;

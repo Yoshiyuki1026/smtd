@@ -128,7 +128,7 @@ function BacklogTaskItem({
       {/* 削除ボタン（タッチターゲット最適化: 40px） */}
       <button
         onClick={() => onDelete(task.id)}
-        className="flex h-10 w-10 items-center justify-center rounded-lg text-zinc-600 opacity-0 transition-all hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100 focus:ring-2 focus:ring-amber-400"
+        className="flex h-10 w-10 items-center justify-center rounded-lg text-zinc-600 opacity-0 transition-all hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100 focus:opacity-100 focus:ring-2 focus:ring-amber-400"
         aria-label="削除"
       >
         <Trash2 size={18} />
