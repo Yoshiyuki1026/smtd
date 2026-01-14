@@ -143,7 +143,10 @@ export async function POST(request: Request) {
       },
     });
 
-    const text = result.text?.trim() || '';
+    let text = result.text?.trim() || '';
+
+    // thinking leak 除去（先頭の英単語ラベルを削除）
+    text = text.replace(/^(thoughtful|thinking|summary|response|answer)\s*/i, '');
 
     // 空の場合はフォールバック
     if (!text) {

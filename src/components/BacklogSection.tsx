@@ -103,10 +103,8 @@ function BacklogTaskItem({
       className="group flex items-center gap-3 rounded-lg bg-zinc-900/50 border border-zinc-800 px-4 py-3"
       style={{
         opacity: isDragging ? 0.5 : 1,
-        cursor: isDragging ? 'grabbing' : 'grab',
       }}
       {...attributes}
-      {...listeners}
     >
       {/* 今やることに昇格ボタン（タッチターゲット最適化: 40px） */}
       <button
@@ -119,8 +117,11 @@ function BacklogTaskItem({
         <ArrowUp size={20} />
       </button>
 
-      {/* タスク名 */}
-      <span className="flex-1 text-zinc-300 text-sm">
+      {/* タスク名（drag handle） */}
+      <span
+        className="flex-1 text-zinc-300 text-sm cursor-grab active:cursor-grabbing"
+        {...listeners}
+      >
         {task.title}
       </span>
 
