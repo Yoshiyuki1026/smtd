@@ -52,23 +52,23 @@ export default function Home() {
         {/* オンボーディング */}
         <Onboarding />
 
-        {/* 先延ばしブレイクスルー */}
+        {/* 先延ばしブレイクスルー（中央揃え） */}
         <ProcrastinationBreakthrough />
 
-        {/* ルナバー（画面下部固定） */}
-        <LunaBar />
-
-        <main className="mx-auto max-w-lg px-4 py-8 pb-24">
+        <main className="mx-auto max-w-lg px-4 py-8">
           {/* ヘッダー: タイトル + ゴールカウンター */}
-          <header className="mb-8 text-center">
-            <h1 className="text-3xl font-bold tracking-tight mb-2">
+          <header className="mb-6 text-center">
+            <h1 className="text-2xl font-bold tracking-tight mb-2">
               <span className="text-rust-gradient">
-                すたどら
+                Supermassive Task Drive
               </span>
             </h1>
             {/* ゴールカウンター（ヘッダー統合） */}
             <GoalCounter />
           </header>
+
+          {/* ルナ（主役！タイトルと今やることの間） */}
+          <LunaBar />
 
           {/* 今やること（フォーカスエリア） */}
           <FocusSection />

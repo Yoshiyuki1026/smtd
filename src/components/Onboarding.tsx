@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Plus } from 'lucide-react';
 import { useTaskStore } from '@/stores/taskStore';
+import Image from 'next/image';
 
 type Step = 1 | 2 | 3;
 
@@ -107,6 +108,13 @@ export function Onboarding() {
 
   const step = steps[currentStep];
 
+  // ルナのセリフ（ステップ別）
+  const lunaLines: Record<Step, string> = {
+    1: 'ねえ、まだ寝てるの？ 私はもう準備できてるんだけど。まず1つやってみなよ。',
+    2: 'へえ、追加できたじゃん。控え室から「今やること」に上げて、集中しよ？',
+    3: '完了したらタップ。それがあんたの資産になるんだよ。センス見せてね。',
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -142,6 +150,25 @@ export function Onboarding() {
                     }`}
                   />
                 ))}
+              </div>
+            </div>
+
+            {/* ルナのナビゲーション */}
+            <div className="mb-6 flex items-start gap-4 rounded-lg bg-purple-900/20 border border-purple-500/30 p-4">
+              <div className="shrink-0">
+                <Image
+                  src="/luna-avatar-v6.png"
+                  alt="Luna"
+                  width={56}
+                  height={56}
+                  className="rounded-full border-2 border-cyan-500/50"
+                />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-cyan-300 mb-1">ルナ</p>
+                <p className="text-sm text-zinc-300 leading-relaxed">
+                  {lunaLines[currentStep]}
+                </p>
               </div>
             </div>
 

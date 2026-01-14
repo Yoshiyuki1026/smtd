@@ -20,6 +20,9 @@ const isComboActive = (lastCompletedAt?: string) => {
   return diff < 5 * 60 * 1000; // 5分
 };
 
+// ナビゲーターモード: CATS(ルナ) / DOGS(ボス)
+type NavigatorMode = 'cats' | 'dogs';
+
 interface TaskStore {
   // タスク
   tasks: Task[];
@@ -33,6 +36,10 @@ interface TaskStore {
   // ゲーム状態
   gameState: GameState;
   checkDateChange: () => void;
+
+  // ナビゲーターモード（CATS/DOGS切り替え）
+  navigatorMode: NavigatorMode;
+  setNavigatorMode: (mode: NavigatorMode) => void;
 
   // ルナ
   lunaMode: LunaMode;
@@ -191,6 +198,13 @@ export const useTaskStore = create<TaskStore>()(
       },
 
       // ===========================================
+      // ナビゲーターモード
+      // ===========================================
+      navigatorMode: 'cats',
+
+      setNavigatorMode: (mode) => set({ navigatorMode: mode }),
+
+      // ===========================================
       // ルナ
       // ===========================================
       lunaMode: 'standard',
@@ -214,6 +228,7 @@ export const useTaskStore = create<TaskStore>()(
       partialize: (state) => ({
         tasks: state.tasks,
         gameState: state.gameState,
+        navigatorMode: state.navigatorMode,
       }),
     }
   )

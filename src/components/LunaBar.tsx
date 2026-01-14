@@ -1,13 +1,14 @@
 'use client';
 
 // ===========================================
-// LunaBar - ルナのセリフ（画面下部固定）
-// Industrial Noir Theme
-// ジョブズ版: 常時表示、Dock的存在感
+// NavigatorBar - ナビゲーター（ルナ/ボス）のセリフ
+// CATS: ルナ（ネオンパープル、シアン）
+// DOGS: ボス（オリーブドラブ、アンバー）
 // ===========================================
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { useTaskStore } from '@/stores/taskStore';
 import type { LunaContext } from '@/types';
 
@@ -18,7 +19,8 @@ const IDLE_TIMEOUT = 5 * 60 * 1000;
 const VISIBILITY_COOLDOWN = 3 * 60 * 1000;
 
 export function LunaBar() {
-  const { lunaContext, lunaMode, lunaTaskTitle } = useTaskStore();
+  const { lunaContext, lunaMode, lunaTaskTitle, navigatorMode, setNavigatorMode } = useTaskStore();
+  const isDogs = navigatorMode === 'dogs';
   const [mounted, setMounted] = useState(false);
   const [currentLine, setCurrentLine] = useState('...');
   const [isLoading, setIsLoading] = useState(false);
@@ -37,8 +39,11 @@ export function LunaBar() {
     setIsLoading(true);
     setCurrentLine('...');
 
+    // モードに応じてAPIエンドポイントを切り替え
+    const endpoint = isDogs ? '/api/boss' : '/api/luna';
+
     try {
-      const response = await fetch('/api/luna', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode: lunaMode, context, taskTitle }),
@@ -61,7 +66,7 @@ export function LunaBar() {
     } finally {
       setIsLoading(false);
     }
-  }, [lunaMode]);
+  }, [lunaMode, isDogs]);
 
   // idleタイマーをリセット
   const resetIdleTimer = useCallback(() => {
@@ -136,13 +141,18 @@ export function LunaBar() {
     };
   }, []);
 
-  // スタイル
-  const barStyle = lunaMode === 'entertained'
-    ? 'bg-amber-500/10 border-amber-500/30'
-    : 'bg-cyan-500/10 border-cyan-500/30';
+  // スタイル（CATS: シアン/パープル、DOGS: オリーブ/アンバー）
+  const barStyle = isDogs
+    ? 'bg-amber-900/20 border-amber-700/40'
+    : lunaMode === 'entertained'
+      ? 'bg-amber-500/10 border-amber-500/30'
+      : 'bg-cyan-500/10 border-cyan-500/30';
 
-  const iconColor = lunaMode === 'entertained' ? '⚡' : '◈';
-  const textColor = lunaMode === 'entertained' ? 'text-amber-400' : 'text-cyan-400';
+  const iconColor = isDogs ? '🐺' : (lunaMode === 'entertained' ? '⚡' : '🐾');
+  const textColor = isDogs ? 'text-amber-400' : (lunaMode === 'entertained' ? 'text-amber-400' : 'text-cyan-400');
+  const avatarBorder = isDogs ? 'border-amber-600/50 shadow-amber-600/20' : 'border-cyan-500/50 shadow-cyan-500/20';
+  const avatarSrc = isDogs ? '/boss-avatar.png' : '/luna-avatar-v6.png';
+  const navigatorName = isDogs ? 'ボス' : 'ルナ';
 
   // マウント前は何も表示しない（SSR対策）
   if (!mounted) return null;
@@ -151,13 +161,28 @@ export function LunaBar() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`fixed bottom-0 left-0 right-0 z-50 border-t backdrop-blur-md ${barStyle}`}
+      className={`mb-6 rounded-xl border backdrop-blur-md ${barStyle}`}
     >
-      <div className="mx-auto max-w-lg px-4 py-3">
-        <div className="flex items-center gap-3">
-          <span className={`text-lg shrink-0 ${textColor}`}>
-            {iconColor}
-          </span>
+      <div className="px-4 py-4">
+        <div className="flex items-center gap-4">
+          {/* ナビゲーターアバター（タップで切り替え） */}
+          <button
+            onClick={() => setNavigatorMode(isDogs ? 'cats' : 'dogs')}
+            className="shrink-0 relative group"
+            title={`${isDogs ? 'ルナ' : 'ボス'}に切り替え`}
+          >
+            <Image
+              src={avatarSrc}
+              alt={navigatorName}
+              width={72}
+              height={72}
+              className={`rounded-full border-2 ${avatarBorder} shadow-lg transition-transform group-hover:scale-105`}
+            />
+            {/* モードインジケーター */}
+            <span className={`absolute -bottom-1 -right-1 text-sm ${textColor}`}>
+              {iconColor}
+            </span>
+          </button>
           <span className={`text-zinc-100 font-medium tracking-wide text-sm ${isLoading ? 'animate-pulse' : ''}`}>
             {currentLine}
           </span>
