@@ -6,7 +6,7 @@
 // Industrial Noir Theme
 // ===========================================
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
 
@@ -15,25 +15,28 @@ type Step = 1 | 2 | 3;
 export function Onboarding() {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<Step>(1);
-  const [hasCheckedStorage, setHasCheckedStorage] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
-  // SSR/Hydration対策：マウント後にlocalStorageを確認
+  // Hydration対策: クライアント側でのみレンダリング
+  // eslint-disable react-hooks/exhaustive-deps
   useEffect(() => {
-    // ブラウザ環境でのみ実行
-    if (typeof window === 'undefined') return;
+    setIsMounted(true);
+  }, []);
 
-    if (hasCheckedStorage) return;
-    setHasCheckedStorage(true);
+  // isMountedが変更されたら、localStorageをチェックしてisOpenを設定
+  // eslint-disable react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!isMounted) return;
 
     // 初回起動判定：localStorage に `smtd-onboarding-done` がなければ表示
     const isDone = localStorage.getItem('smtd-onboarding-done');
     if (!isDone) {
       setIsOpen(true);
     }
-  }, [hasCheckedStorage]);
+  }, [isMounted]);
 
-  // Hydration チェック中は何も表示しない
-  if (!hasCheckedStorage) return null;
+  // Hydration 中は何も表示しない
+  if (!isMounted) return null;
 
   // ステップ情報
   const steps: Record<
@@ -87,7 +90,7 @@ export function Onboarding() {
 
   const completeOnboarding = () => {
     localStorage.setItem('smtd-onboarding-done', 'true');
-    setState({ isOpen: false, isMounted: true });
+    setIsOpen(false);
   };
 
   const step = steps[currentStep];

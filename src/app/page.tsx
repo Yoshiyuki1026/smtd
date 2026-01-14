@@ -16,6 +16,7 @@ import { TaskInput } from '@/components/TaskInput';
 import { LunaBar } from '@/components/LunaBar';
 import { RewardEffect } from '@/components/RewardEffect';
 import { ProcrastinationBreakthrough } from '@/components/ProcrastinationBreakthrough';
+import { Onboarding } from '@/components/Onboarding';
 
 export default function Home() {
   const { checkDateChange, focusTask } = useTaskStore();
@@ -47,6 +48,9 @@ export default function Home() {
       <div className="min-h-screen bg-black text-zinc-100">
         {/* 報酬演出 */}
         <RewardEffect />
+
+        {/* オンボーディング */}
+        <Onboarding />
 
         {/* 先延ばしブレイクスルー */}
         <ProcrastinationBreakthrough />
