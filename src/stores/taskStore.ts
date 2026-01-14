@@ -24,6 +24,7 @@ interface TaskStore {
   // タスク
   tasks: Task[];
   addTask: (title: string) => void;      // 控え室に追加
+  addTaskWithFocus: (title: string) => void;  // 3つ未満なら即フォーカス
   completeTask: (id: string) => void;
   deleteTask: (id: string) => void;
   focusTask: (id: string) => void;       // 控え室 → 今やること
@@ -62,6 +63,24 @@ export const useTaskStore = create<TaskStore>()(
           title: title.trim(),
           completed: false,
           focused: false,  // 控え室に追加
+          createdAt: new Date().toISOString(),
+        };
+
+        set({ tasks: [...tasks, newTask] });
+      },
+
+      addTaskWithFocus: (title: string) => {
+        const { tasks } = get();
+
+        // 3つ未満ならfocusedで追加、3つ以上なら控え室に追加
+        const focusedCount = tasks.filter((t) => t.focused && !t.completed).length;
+        const shouldFocus = focusedCount < 3;
+
+        const newTask: Task = {
+          id: generateId(),
+          title: title.trim(),
+          completed: false,
+          focused: shouldFocus,
           createdAt: new Date().toISOString(),
         };
 

@@ -10,14 +10,19 @@ import { useTaskStore } from '@/stores/taskStore';
 import { Plus } from 'lucide-react';
 
 export function TaskInput() {
-  const { addTask } = useTaskStore();
+  const { addTask, addTaskWithFocus } = useTaskStore();
   const [inputValue, setInputValue] = useState('');
+  const [directAdd, setDirectAdd] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
 
-    addTask(inputValue.trim());
+    if (directAdd) {
+      addTaskWithFocus(inputValue.trim());
+    } else {
+      addTask(inputValue.trim());
+    }
     setInputValue('');
   };
 
@@ -39,6 +44,29 @@ export function TaskInput() {
         >
           <Plus size={24} />
         </button>
+      </div>
+
+      {/* トグルスイッチ */}
+      <div className="mt-3 flex items-center gap-3 px-1">
+        <button
+          type="button"
+          onClick={() => setDirectAdd(!directAdd)}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+            directAdd
+              ? 'bg-amber-500/40 border border-amber-500/60'
+              : 'bg-zinc-700/50 border border-zinc-600/50'
+          }`}
+          aria-label="今やることに直接追加"
+        >
+          <span
+            className={`inline-block h-5 w-5 transform rounded-full bg-zinc-100 transition-transform ${
+              directAdd ? 'translate-x-5' : 'translate-x-0.5'
+            }`}
+          />
+        </button>
+        <label className="text-sm text-zinc-400 select-none cursor-pointer" onClick={() => setDirectAdd(!directAdd)}>
+          今やることに直接追加
+        </label>
       </div>
     </form>
   );

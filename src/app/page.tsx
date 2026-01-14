@@ -9,6 +9,7 @@ import { useEffect } from 'react';
 import { useTaskStore } from '@/stores/taskStore';
 import { FocusSection } from '@/components/FocusSection';
 import { BacklogSection } from '@/components/BacklogSection';
+import { CompletedToday } from '@/components/CompletedToday';
 import { GoalCounter } from '@/components/GoalCounter';
 import { TaskInput } from '@/components/TaskInput';
 import { LunaBar } from '@/components/LunaBar';
@@ -61,6 +62,9 @@ export default function Home() {
 
         {/* 控え室（折りたたみ式） */}
         <BacklogSection />
+
+        {/* 完了タスク（折りたたみ式） */}
+        <CompletedToday />
 
         {/* フッター */}
         <footer className="mt-12 text-center text-xs text-zinc-600">
