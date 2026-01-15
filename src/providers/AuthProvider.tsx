@@ -2,12 +2,13 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { User } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseEnabled } from '@/lib/supabase'
 
 type AuthContextType = {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
+  isGuestMode: boolean // Supabase未設定時のゲストモード
   signUp: (email: string, password: string) => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
@@ -21,11 +22,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // 初期化: セッション確認
   useEffect(() => {
+    // Supabase未設定の場合はゲストモードで即完了
+    if (!isSupabaseEnabled || !supabase) {
+      setIsLoading(false)
+      return
+    }
+
+    const client = supabase // ローカル変数で型を確定
+
     const initAuth = async () => {
       try {
         const {
           data: { session },
-        } = await supabase.auth.getSession()
+        } = await client.auth.getSession()
         setUser(session?.user ?? null)
       } catch (error) {
         console.error('Auth initialization error:', error)
@@ -39,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // リアルタイムリスナー: 認証状態変化を監視
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = client.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
     })
 
@@ -49,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signUp = async (email: string, password: string) => {
+    if (!supabase) throw new Error('認証機能は現在利用できません（ゲストモード）')
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -57,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signIn = async (email: string, password: string) => {
+    if (!supabase) throw new Error('認証機能は現在利用できません（ゲストモード）')
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -65,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
+    if (!supabase) throw new Error('認証機能は現在利用できません（ゲストモード）')
     const { error } = await supabase.auth.signOut()
     if (error) throw error
   }
@@ -73,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     isLoading,
     isAuthenticated: user !== null,
+    isGuestMode: !isSupabaseEnabled,
     signUp,
     signIn,
     signOut,
