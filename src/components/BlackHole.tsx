@@ -8,12 +8,12 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTaskStore } from '@/stores/taskStore';
-import { Trash2, Archive, Zap } from 'lucide-react';
+import { Trash2, Archive, Zap, RotateCcw, ListPlus } from 'lucide-react';
 
 type BlackHoleTab = 'active' | 'archived';
 
 export function BlackHole() {
-  const { blackHole, addToBlackHole, archiveBlackHoleItem, deleteBlackHoleItem } = useTaskStore();
+  const { blackHole, addToBlackHole, archiveBlackHoleItem, unarchiveBlackHoleItem, deleteBlackHoleItem, convertBlackHoleToTask } = useTaskStore();
   const [inputValue, setInputValue] = useState('');
   const [activeTab, setActiveTab] = useState<BlackHoleTab>('active');
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -151,6 +151,13 @@ export function BlackHole() {
                     {activeTab === 'active' ? (
                       <>
                         <button
+                          onClick={() => convertBlackHoleToTask(item.id)}
+                          className="p-1.5 rounded text-green-500 hover:bg-zinc-700 transition-colors"
+                          title="控え室に移す"
+                        >
+                          <ListPlus size={16} />
+                        </button>
+                        <button
                           onClick={() => archiveBlackHoleItem(item.id)}
                           className="p-1.5 rounded text-indigo-500 hover:bg-zinc-700 transition-colors"
                           title="アーカイブ"
@@ -166,13 +173,29 @@ export function BlackHole() {
                         </button>
                       </>
                     ) : (
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="p-1.5 rounded text-red-500 hover:bg-zinc-700 transition-colors"
-                        title="削除"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <>
+                        <button
+                          onClick={() => convertBlackHoleToTask(item.id)}
+                          className="p-1.5 rounded text-green-500 hover:bg-zinc-700 transition-colors"
+                          title="控え室に移す"
+                        >
+                          <ListPlus size={16} />
+                        </button>
+                        <button
+                          onClick={() => unarchiveBlackHoleItem(item.id)}
+                          className="p-1.5 rounded text-amber-500 hover:bg-zinc-700 transition-colors"
+                          title="未整理に戻す"
+                        >
+                          <RotateCcw size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="p-1.5 rounded text-red-500 hover:bg-zinc-700 transition-colors"
+                          title="削除"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>

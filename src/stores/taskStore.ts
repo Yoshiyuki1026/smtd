@@ -57,7 +57,9 @@ interface TaskStore {
   blackHole: BlackHoleItem[];
   addToBlackHole: (content: string) => void;
   archiveBlackHoleItem: (id: string) => void;
+  unarchiveBlackHoleItem: (id: string) => void;  // アーカイブ→未整理
   deleteBlackHoleItem: (id: string) => void;
+  convertBlackHoleToTask: (id: string) => void;  // BlackHole→控え室タスク
 }
 
 export const useTaskStore = create<TaskStore>()(
@@ -286,6 +288,38 @@ export const useTaskStore = create<TaskStore>()(
 
         set({
           blackHole: blackHole.filter((item) => item.id !== id),
+        });
+      },
+
+      // アーカイブ解除（アーカイブ→未整理）
+      unarchiveBlackHoleItem: (id: string) => {
+        const { blackHole } = get();
+
+        set({
+          blackHole: blackHole.map((item) =>
+            item.id === id ? { ...item, archived: false } : item
+          ),
+        });
+      },
+
+      // BlackHoleアイテムをタスク（控え室）に変換
+      convertBlackHoleToTask: (id: string) => {
+        const { blackHole, tasks } = get();
+        const item = blackHole.find((i) => i.id === id);
+        if (!item) return;
+
+        // 新しいタスクを作成（控え室に追加）
+        const newTask: Task = {
+          id: generateId(),
+          title: item.content,
+          completed: false,
+          focused: false,
+          createdAt: new Date().toISOString(),
+        };
+
+        set({
+          tasks: [...tasks, newTask],
+          blackHole: blackHole.filter((i) => i.id !== id),
         });
       },
     }),

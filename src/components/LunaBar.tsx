@@ -215,9 +215,14 @@ export function LunaBar() {
               {iconColor}
             </span>
           </button>
-          <span className={`text-zinc-100 font-medium tracking-wide text-sm ${isLoading ? 'animate-pulse' : ''}`}>
-            {currentLine}
-          </span>
+          <div className="flex-1">
+            <p className={`text-xs font-medium mb-0.5 ${textColor}`}>
+              {navigatorName}
+            </p>
+            <span className={`text-zinc-100 font-medium tracking-wide text-sm ${isLoading ? 'animate-pulse' : ''}`}>
+              {currentLine}
+            </span>
+          </div>
         </div>
       </div>
     </motion.div>
