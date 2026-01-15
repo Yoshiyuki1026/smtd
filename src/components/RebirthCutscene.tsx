@@ -66,11 +66,7 @@ export function RebirthCutscene({ isOpen, onClose, rebirthCount }: RebirthCutsce
   }, [isOpen]);
 
   useEffect(() => {
-    if (!isOpen) {
-      // カットシーンが閉じたらshowTextをリセット
-      setShowText(false);
-      return;
-    }
+    if (!isOpen) return;
 
     // 星の演出開始
     fireStarConfetti();
@@ -90,6 +86,8 @@ export function RebirthCutscene({ isOpen, onClose, rebirthCount }: RebirthCutsce
     return () => {
       clearTimeout(textTimer);
       clearTimeout(closeTimer);
+      // クリーンアップでshowTextをリセット（カットシーン終了時）
+      setShowText(false);
     };
   }, [isOpen, onClose, fireStarConfetti]);
 
