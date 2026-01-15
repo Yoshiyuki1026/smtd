@@ -7,6 +7,7 @@ import { useDeviceOrientation } from '@/hooks/useDeviceOrientation';
 // matter-js の型定義
 type MatterEngine = import('matter-js').Engine;
 type MatterBody = import('matter-js').Body;
+type MatterRunner = import('matter-js').Runner;
 
 interface Stone {
   body: MatterBody;
@@ -25,19 +26,27 @@ interface Stone {
 export const DiamondPile: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<MatterEngine | null>(null);
+  const runnerRef = useRef<MatterRunner | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
   const stonesRef = useRef<Stone[]>([]);
   const matterRef = useRef<typeof import('matter-js') | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const { gameState, lastReward } = useTaskStore();
-  const { gravity } = useDeviceOrientation();
+  const { gravity, needsPermission, permissionState, requestPermission } = useDeviceOrientation();
 
   // matter-js を動的インポート（SSR回避）
   useEffect(() => {
-    import('matter-js').then((Matter) => {
-      matterRef.current = Matter;
-      setIsLoaded(true);
-    });
+    import('matter-js')
+      .then((Matter) => {
+        matterRef.current = Matter;
+        setIsLoaded(true);
+      })
+      .catch((error) => {
+        console.error('Failed to load matter-js:', error);
+        setLoadError('物理演算エンジンの読み込みに失敗しました');
+      });
   }, []);
 
   // ダイヤを追加
@@ -109,31 +118,28 @@ export const DiamondPile: React.FC = () => {
       }),
     ]);
 
-    // Renderer 作成（カスタム描画）
-    const render = Matter.Render.create({
-      canvas,
-      engine,
-      options: {
-        width,
-        height,
-        wireframes: false,
-        background: 'transparent',
-      },
-    });
-
-    // Runner 実行
+    // Runner 実行（物理演算のみ）
     const runner = Matter.Runner.create();
+    runnerRef.current = runner;
     Matter.Runner.run(runner, engine);
 
-    // イベント：毎フレーム描画
-    Matter.Events.on(render, 'afterRender', () => {
+    // 描画ループ（requestAnimationFrame）
+    const animate = () => {
       drawStones(canvas, stonesRef.current);
-    });
+      animationFrameRef.current = requestAnimationFrame(animate);
+    };
+    animate();
 
     // クリーンアップ時に削除
     return () => {
-      Matter.Runner.stop(runner);
-      Matter.Render.stop(render);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      if (runnerRef.current) {
+        Matter.Runner.stop(runnerRef.current);
+        runnerRef.current = null;
+      }
       Matter.World.clear(engine.world, false);
       Matter.Engine.clear(engine);
       engineRef.current = null;
@@ -154,6 +160,21 @@ export const DiamondPile: React.FC = () => {
     addStone();
   }, [lastReward, addStone]);
 
+  // エラー時のフォールバック表示
+  if (loadError) {
+    return (
+      <div className="w-full flex flex-col items-center gap-2">
+        <div className="w-full h-[180px] border border-amber-600/50 rounded-lg bg-gradient-to-b from-slate-900 to-slate-950 flex items-center justify-center">
+          <span className="text-amber-400/50 text-sm">{loadError}</span>
+        </div>
+        <div className="text-center text-sm text-amber-200">
+          <span className="font-bold text-lg text-amber-400">💎 {gameState.totalStones}</span>
+          <p className="text-xs text-slate-400">Total Stones</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full flex flex-col items-center gap-2">
       {/* キャンバス */}
@@ -168,6 +189,16 @@ export const DiamondPile: React.FC = () => {
         <span className="font-bold text-lg text-amber-400">💎 {gameState.totalStones}</span>
         <p className="text-xs text-slate-400">Total Stones</p>
       </div>
+
+      {/* iOS傾きセンサー許可ボタン（iOS 13+のみ表示） */}
+      {needsPermission && permissionState === 'unknown' && (
+        <button
+          onClick={requestPermission}
+          className="text-xs px-3 py-1 rounded-md bg-amber-600/20 border border-amber-600/40 text-amber-400 hover:bg-amber-600/30 transition-colors"
+        >
+          📱 傾きセンサーを有効化
+        </button>
+      )}
     </div>
   );
 };
