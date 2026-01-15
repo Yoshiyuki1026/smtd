@@ -29,7 +29,7 @@ npm run lint   # ESLint実行
 
 | レイヤー | 選定 |
 |----------|------|
-| Framework | Next.js 16 (App Router) |
+| Framework | Next.js 15.5.2 (App Router) |
 | UI | Tailwind CSS v4 |
 | State | Zustand |
 | Animation | Framer Motion |
