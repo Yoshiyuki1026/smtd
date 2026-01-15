@@ -13,7 +13,8 @@ import { useTaskStore } from '@/stores/taskStore';
 type Phase = 'input' | 'loading' | 'response' | 'result';
 
 export function ProcrastinationBreakthrough() {
-  const { addTask } = useTaskStore();
+  const { addTask, navigatorMode } = useTaskStore();
+  const isDogs = navigatorMode === 'dogs';
   const [isOpen, setIsOpen] = useState(false);
   const [phase, setPhase] = useState<Phase>('input');
   const [inputText, setInputText] = useState('');
@@ -54,8 +55,14 @@ export function ProcrastinationBreakthrough() {
 
     setPhase('loading');
 
+    // navigatorModeに応じてAPIエンドポイントを切り替え
+    const endpoint = isDogs ? '/api/boss' : '/api/luna';
+    const fallbackLine = isDogs
+      ? '……で、やるのか？やらんのか？'
+      : 'で、やるん？やらんの？';
+
     try {
-      const response = await fetch('/api/luna', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -67,39 +74,45 @@ export function ProcrastinationBreakthrough() {
 
       if (response.ok) {
         const data = await response.json();
-        setLunaResponse(data.line || 'で、やるん？やらんの？');
+        setLunaResponse(data.line || fallbackLine);
       } else {
-        setLunaResponse('で、やるん？やらんの？');
+        setLunaResponse(fallbackLine);
       }
       setPhase('response');
     } catch (error) {
-      console.error('Failed to fetch Luna response:', error);
-      setLunaResponse('で、やるん？やらんの？');
+      console.error('Failed to fetch response:', error);
+      setLunaResponse(fallbackLine);
       setPhase('response');
     }
-  }, [inputText]);
+  }, [inputText, isDogs]);
 
   // 「今やる」を選択
   const handleDoIt = useCallback(() => {
     addTask(inputText.trim());
-    setResultMessage('よっしゃ、タスクに追加したで。やるやん。');
+    const message = isDogs
+      ? '……いいセンスだ。タスクに追加した。やれ。'
+      : 'よっしゃ、タスクに追加したで。やるやん。';
+    setResultMessage(message);
     setPhase('result');
-  }, [addTask, inputText]);
+  }, [addTask, inputText, isDogs]);
 
   // 「やらない」を選択
   const handleSkip = useCallback(() => {
-    setResultMessage('あははは！まあ、あんたらしいわ。また来いや。');
+    const message = isDogs
+      ? '……やれやれ、まあいい。逃げるのも戦術だ。'
+      : 'あははは！まあ、あんたらしいわ。また来いや。';
+    setResultMessage(message);
     setPhase('result');
-  }, []);
+  }, [isDogs]);
 
   return (
     <>
       {/* トリガーボタン（中央揃え） */}
       <button
         onClick={handleOpen}
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 rounded-full bg-amber-500/20 border border-amber-500/40 px-4 py-3 text-amber-400 hover:bg-amber-500/30 transition-all shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+        className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 rounded-full bg-amber-500/20 border border-amber-500/40 px-4 py-3 text-amber-400 hover:bg-amber-500/30 transition-all shadow-[0_0_20px_rgba(245,158,11,0.2)]"
       >
-        <span className="text-lg">⚡</span>
+        <span className="text-lg">{isDogs ? '🐺' : '⚡'}</span>
         <span className="text-sm font-medium">何か先延ばししてない？</span>
       </button>
 
@@ -124,7 +137,7 @@ export function ProcrastinationBreakthrough() {
               {phase === 'input' && (
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-amber-400">
-                    <span className="text-xl">⚡</span>
+                    <span className="text-xl">{isDogs ? '🐺' : '⚡'}</span>
                     <h2 className="text-lg font-bold">先延ばしブレイクスルー</h2>
                   </div>
                   <p className="text-zinc-400 text-sm">
@@ -158,8 +171,10 @@ export function ProcrastinationBreakthrough() {
               {/* ローディングフェーズ */}
               {phase === 'loading' && (
                 <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                  <div className="text-4xl animate-pulse">⚡</div>
-                  <p className="text-amber-400 animate-pulse">ルナが考え中...</p>
+                  <div className="text-4xl animate-pulse">{isDogs ? '🐺' : '⚡'}</div>
+                  <p className="text-amber-400 animate-pulse">
+                    {isDogs ? 'ボスが考え中...' : 'ルナが考え中...'}
+                  </p>
                 </div>
               )}
 
@@ -167,7 +182,7 @@ export function ProcrastinationBreakthrough() {
               {phase === 'response' && (
                 <div className="space-y-6">
                   <div className="flex items-start gap-3">
-                    <span className="text-2xl shrink-0">⚡</span>
+                    <span className="text-2xl shrink-0">{isDogs ? '🐺' : '⚡'}</span>
                     <div className="space-y-2">
                       <p className="text-zinc-300 text-sm">
                         「{inputText}」について...
@@ -198,7 +213,7 @@ export function ProcrastinationBreakthrough() {
               {phase === 'result' && (
                 <div className="space-y-6">
                   <div className="flex items-start gap-3">
-                    <span className="text-2xl shrink-0">⚡</span>
+                    <span className="text-2xl shrink-0">{isDogs ? '🐺' : '⚡'}</span>
                     <p className="text-amber-100 font-medium leading-relaxed">
                       {resultMessage}
                     </p>

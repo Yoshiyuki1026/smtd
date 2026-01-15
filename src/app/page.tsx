@@ -21,6 +21,7 @@ import { ProcrastinationBreakthrough } from '@/components/ProcrastinationBreakth
 import { Onboarding } from '@/components/Onboarding';
 import { AuthModal } from '@/components/AuthModal';
 import { Settings } from '@/components/Settings';
+import { Settings as SettingsIcon } from 'lucide-react';
 // DiamondPile は CompletedToday 内で表示（重複防止）
 
 export default function Home() {
@@ -83,22 +84,22 @@ export default function Home() {
                 {/* 設定ボタン */}
                 <button
                   onClick={() => setIsSettingsOpen(true)}
-                  className="text-xl p-2 rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
+                  className="h-9 w-9 flex items-center justify-center rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
                   title="設定"
                 >
-                  ⚙️
+                  <SettingsIcon size={20} />
                 </button>
 
                 {/* 認証ボタン */}
                 {!authLoading && (
                   user ? (
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-bold">
+                      <div className="flex items-center justify-center h-9 w-9 rounded-full bg-purple-600 text-white text-sm font-bold">
                         {(user.email?.[0] || '?').toUpperCase()}
                       </div>
                       <button
                         onClick={signOut}
-                        className="text-xs px-3 py-1 rounded-md bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors"
+                        className="h-9 px-4 rounded-lg bg-zinc-800 text-zinc-300 text-sm hover:bg-zinc-700 transition-colors"
                       >
                         ログアウト
                       </button>
@@ -106,7 +107,7 @@ export default function Home() {
                   ) : (
                     <button
                       onClick={() => setIsAuthModalOpen(true)}
-                      className="text-xs px-3 py-1 rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+                      className="h-9 px-4 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700 transition-colors"
                     >
                       ログイン
                     </button>

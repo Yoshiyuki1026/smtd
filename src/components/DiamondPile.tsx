@@ -204,8 +204,49 @@ export const DiamondPile: React.FC = () => {
 };
 
 /**
+ * 8角形ダイヤモンド形状を描画
+ */
+function drawDiamondShape(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, rotation: number) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotation);
+
+  ctx.beginPath();
+  const angles = 8;
+  for (let i = 0; i < angles; i++) {
+    const angle = (i / angles) * Math.PI * 2 - Math.PI / 2;
+    // 交互に半径を変えてダイヤモンド感を出す
+    const radius = i % 2 === 0 ? size : size * 0.75;
+    const px = Math.cos(angle) * radius;
+    const py = Math.sin(angle) * radius;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+
+  ctx.restore();
+}
+
+/**
+ * 十字形ハイライト（宝石の輝き）
+ */
+function drawSparkle(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+
+  // 縦線
+  ctx.fillRect(x - 0.5, y - size, 1, size * 2);
+  // 横線
+  ctx.fillRect(x - size, y - 0.5, size * 2, 1);
+
+  // 小さな中心点
+  ctx.beginPath();
+  ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/**
  * カスタム描画関数
- * matter-js の Bodies を描画
+ * matter-js の Bodies を多角形ダイヤモンドとして描画
  */
 function drawStones(canvas: HTMLCanvasElement, stones: Stone[]) {
   const ctx = canvas.getContext('2d');
@@ -217,31 +258,55 @@ function drawStones(canvas: HTMLCanvasElement, stones: Stone[]) {
   // 各ダイヤを描画
   stones.forEach(({ body }) => {
     const { x, y } = body.position;
-    const radius = 12;
+    const rotation = body.angle; // 物理演算の回転を反映
+    const size = 14;
 
-    // グラデーション作成（ゴールド）
-    const gradient = ctx.createRadialGradient(x - 4, y - 4, 0, x, y, radius);
-    gradient.addColorStop(0, '#fbbf24'); // amber-400
-    gradient.addColorStop(0.5, '#f59e0b'); // amber-500
-    gradient.addColorStop(1, '#b45309'); // amber-700
+    // ドロップシャドウ
+    ctx.save();
+    ctx.shadowColor = 'rgba(245, 158, 11, 0.5)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 3;
 
-    // 円を描画
+    // グラデーション作成（深みのあるゴールド）
+    const gradient = ctx.createRadialGradient(x - 3, y - 3, 0, x, y, size);
+    gradient.addColorStop(0, '#fef3c7');   // 明るいハイライト（amber-100）
+    gradient.addColorStop(0.25, '#fcd34d'); // amber-300
+    gradient.addColorStop(0.5, '#fbbf24');  // amber-400
+    gradient.addColorStop(0.75, '#f59e0b'); // amber-500
+    gradient.addColorStop(1, '#92400e');    // 深い影（amber-800）
+
+    // ダイヤモンド形状を描画
     ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    drawDiamondShape(ctx, x, y, size, rotation);
     ctx.fill();
 
-    // ハイライト（光沢）
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-    ctx.beginPath();
-    ctx.arc(x - 4, y - 4, 4, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.restore();
 
-    // アウトライン
-    ctx.strokeStyle = '#92400e'; // amber-900
+    // アウトライン（回転を反映）
+    ctx.strokeStyle = '#78350f'; // amber-900
     ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    drawDiamondShape(ctx, x, y, size, rotation);
     ctx.stroke();
+
+    // 内側のファセット線（カット面を表現）
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+
+    ctx.strokeStyle = 'rgba(254, 243, 199, 0.3)'; // amber-100の透明版
+    ctx.lineWidth = 0.5;
+
+    // 中心から各頂点への線（4本）
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI * 2 - Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(angle) * size * 0.6, Math.sin(angle) * size * 0.6);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // ハイライト（十字形の輝き）- 左上に配置
+    drawSparkle(ctx, x - 4, y - 4, 4);
   });
 }
