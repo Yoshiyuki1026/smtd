@@ -62,7 +62,7 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                 <div className="flex items-center justify-between">
                   <span className="text-zinc-400">転生回数</span>
                   <span className="text-xl font-bold text-purple-400">
-                    第 {gameState.rebirthCount} 周目
+                    第 {gameState.rebirthCount ?? 0} 周目
                   </span>
                 </div>
 

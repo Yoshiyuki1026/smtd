@@ -21,6 +21,7 @@ import { ProcrastinationBreakthrough } from '@/components/ProcrastinationBreakth
 import { Onboarding } from '@/components/Onboarding';
 import { AuthModal } from '@/components/AuthModal';
 import { Settings } from '@/components/Settings';
+import { DiamondPile } from '@/components/DiamondPile';
 
 export default function Home() {
   const { checkDateChange, focusTask } = useTaskStore();
@@ -158,6 +159,9 @@ export default function Home() {
             {/* コンテンツ */}
             {bottomTab === 'completed' ? <CompletedToday /> : <BlackHole />}
           </section>
+
+          {/* 物理演算ダイヤ（完了タスクが石として蓄積） */}
+          <DiamondPile />
 
           {/* フッター */}
           <footer className="mt-12 text-center text-xs text-zinc-600">

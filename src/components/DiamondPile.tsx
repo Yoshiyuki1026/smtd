@@ -1,21 +1,15 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
-import {
-  Engine,
-  World,
-  Bodies,
-  Render,
-  Runner,
-  Events,
-  type Engine as EngineType,
-  type Body,
-} from 'matter-js';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTaskStore } from '@/stores/taskStore';
 import { useDeviceOrientation } from '@/hooks/useDeviceOrientation';
 
+// matter-js の型定義
+type MatterEngine = import('matter-js').Engine;
+type MatterBody = import('matter-js').Body;
+
 interface Stone {
-  body: Body;
+  body: MatterBody;
   createdAt: number;
 }
 
@@ -30,16 +24,27 @@ interface Stone {
  */
 export const DiamondPile: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const engineRef = useRef<EngineType | null>(null);
+  const engineRef = useRef<MatterEngine | null>(null);
   const stonesRef = useRef<Stone[]>([]);
+  const matterRef = useRef<typeof import('matter-js') | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const { gameState, lastReward } = useTaskStore();
   const { gravity } = useDeviceOrientation();
 
+  // matter-js を動的インポート（SSR回避）
+  useEffect(() => {
+    import('matter-js').then((Matter) => {
+      matterRef.current = Matter;
+      setIsLoaded(true);
+    });
+  }, []);
+
   // ダイヤを追加
   const addStone = useCallback(() => {
-    if (!engineRef.current || !canvasRef.current) return;
+    if (!engineRef.current || !canvasRef.current || !matterRef.current) return;
 
+    const Matter = matterRef.current;
     const engine = engineRef.current;
     const width = canvasRef.current.clientWidth;
 
@@ -47,25 +52,26 @@ export const DiamondPile: React.FC = () => {
     if (stonesRef.current.length >= 50) {
       const oldStone = stonesRef.current.shift();
       if (oldStone) {
-        World.remove(engine.world, oldStone.body);
+        Matter.World.remove(engine.world, oldStone.body);
       }
     }
 
     // 新しいダイヤを作成（上から落下）
-    const body = Bodies.circle(Math.random() * (width - 40) + 20, -20, 12, {
+    const body = Matter.Bodies.circle(Math.random() * (width - 40) + 20, -20, 12, {
       restitution: 0.6,
       friction: 0.3,
       frictionAir: 0.01,
     });
 
-    World.add(engine.world, body);
+    Matter.World.add(engine.world, body);
     stonesRef.current.push({ body, createdAt: Date.now() });
   }, []);
 
-  // 初期化
+  // 初期化（matter-jsがロードされた後）
   useEffect(() => {
-    if (!canvasRef.current) return;
+    if (!isLoaded || !canvasRef.current || !matterRef.current) return;
 
+    const Matter = matterRef.current;
     const canvas = canvasRef.current;
     const width = canvas.clientWidth;
     const height = 180;
@@ -75,7 +81,7 @@ export const DiamondPile: React.FC = () => {
     canvas.height = height;
 
     // Engine 作成
-    const engine = Engine.create();
+    const engine = Matter.Engine.create();
     engineRef.current = engine;
 
     // World 設定
@@ -86,25 +92,25 @@ export const DiamondPile: React.FC = () => {
     const wallThickness = 20;
 
     // 下部（床）
-    World.add(engine.world, [
-      Bodies.rectangle(width / 2, height - wallThickness / 2, width, wallThickness, {
+    Matter.World.add(engine.world, [
+      Matter.Bodies.rectangle(width / 2, height - wallThickness / 2, width, wallThickness, {
         isStatic: true,
         label: 'ground',
       }),
       // 左壁
-      Bodies.rectangle(-wallThickness / 2, height / 2, wallThickness, height + 40, {
+      Matter.Bodies.rectangle(-wallThickness / 2, height / 2, wallThickness, height + 40, {
         isStatic: true,
         label: 'wall',
       }),
       // 右壁
-      Bodies.rectangle(width + wallThickness / 2, height / 2, wallThickness, height + 40, {
+      Matter.Bodies.rectangle(width + wallThickness / 2, height / 2, wallThickness, height + 40, {
         isStatic: true,
         label: 'wall',
       }),
     ]);
 
     // Renderer 作成（カスタム描画）
-    const render = Render.create({
+    const render = Matter.Render.create({
       canvas,
       engine,
       options: {
@@ -116,23 +122,23 @@ export const DiamondPile: React.FC = () => {
     });
 
     // Runner 実行
-    const runner = Runner.create();
-    Runner.run(runner, engine);
+    const runner = Matter.Runner.create();
+    Matter.Runner.run(runner, engine);
 
     // イベント：毎フレーム描画
-    Events.on(render, 'afterRender', () => {
+    Matter.Events.on(render, 'afterRender', () => {
       drawStones(canvas, stonesRef.current);
     });
 
     // クリーンアップ時に削除
     return () => {
-      Runner.stop(runner);
-      Render.stop(render);
-      World.clear(engine.world, false);
-      Engine.clear(engine);
+      Matter.Runner.stop(runner);
+      Matter.Render.stop(render);
+      Matter.World.clear(engine.world, false);
+      Matter.Engine.clear(engine);
       engineRef.current = null;
     };
-  }, []);
+  }, [isLoaded]);
 
   // 重力方向の更新
   useEffect(() => {
@@ -153,7 +159,7 @@ export const DiamondPile: React.FC = () => {
       {/* キャンバス */}
       <canvas
         ref={canvasRef}
-        className="w-full border border-amber-600 rounded-lg bg-gradient-to-b from-slate-900 to-slate-950"
+        className="w-full border border-amber-600/50 rounded-lg bg-gradient-to-b from-slate-900 to-slate-950"
         style={{ height: '180px' }}
       />
 
