@@ -1,65 +1,93 @@
-import Image from "next/image";
+'use client';
+
+// ===========================================
+// SMTD メイン画面（Cockpit）
+// ジョブズ版: シンプル、本質的、直感的
+// ===========================================
+
+import { useEffect } from 'react';
+import { DndContext, DragEndEvent } from '@dnd-kit/core';
+import { useTaskStore } from '@/stores/taskStore';
+import { FocusSection } from '@/components/FocusSection';
+import { BacklogSection } from '@/components/BacklogSection';
+import { CompletedToday } from '@/components/CompletedToday';
+import { GoalCounter } from '@/components/GoalCounter';
+import { TaskInput } from '@/components/TaskInput';
+import { LunaBar } from '@/components/LunaBar';
+import { RewardEffect } from '@/components/RewardEffect';
+import { ProcrastinationBreakthrough } from '@/components/ProcrastinationBreakthrough';
+import { Onboarding } from '@/components/Onboarding';
 
 export default function Home() {
+  const { checkDateChange, focusTask } = useTaskStore();
+
+  // ドラッグ終了時のハンドラ
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    // ドロップ対象が FocusSection の場合
+    if (over?.id === 'focus-droppable') {
+      focusTask(String(active.id));
+    }
+  };
+
+  // 起動時に日付変更をチェック
+  useEffect(() => {
+    checkDateChange();
+  }, [checkDateChange]);
+
+  // フォーカス復帰時にも日付変更をチェック
+  useEffect(() => {
+    const handleFocus = () => checkDateChange();
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [checkDateChange]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <DndContext onDragEnd={handleDragEnd}>
+      <div className="min-h-screen bg-black text-zinc-100">
+        {/* 報酬演出 */}
+        <RewardEffect />
+
+        {/* オンボーディング */}
+        <Onboarding />
+
+        {/* 先延ばしブレイクスルー（中央揃え） */}
+        <ProcrastinationBreakthrough />
+
+        <main className="mx-auto max-w-lg px-4 py-8">
+          {/* ヘッダー: タイトル + ゴールカウンター */}
+          <header className="mb-6 text-center">
+            <h1 className="text-2xl font-bold tracking-tight mb-2">
+              <span className="text-rust-gradient">
+                Supermassive Task Drive
+              </span>
+            </h1>
+            {/* ゴールカウンター（ヘッダー統合） */}
+            <GoalCounter />
+          </header>
+
+          {/* ルナ（主役！タイトルと今やることの間） */}
+          <LunaBar />
+
+          {/* 今やること（フォーカスエリア） */}
+          <FocusSection />
+
+          {/* タスク追加（常時表示） */}
+          <TaskInput />
+
+          {/* 控え室（折りたたみ式） */}
+          <BacklogSection />
+
+          {/* 完了タスク（折りたたみ式） */}
+          <CompletedToday />
+
+          {/* フッター */}
+          <footer className="mt-12 text-center text-xs text-zinc-600">
+            <p>Supermassive Task Drive v0.3.0</p>
+          </footer>
+        </main>
+      </div>
+    </DndContext>
   );
 }
