@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTaskStore } from '@/stores/taskStore';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { DiamondPile } from '@/components/DiamondPile';
 
 export function CompletedToday() {
   const { tasks } = useTaskStore();
@@ -34,6 +35,11 @@ export function CompletedToday() {
 
   return (
     <section className="mb-6">
+      {/* ダイヤパイル（常時表示） */}
+      <div className="mb-4">
+        <DiamondPile />
+      </div>
+
       {/* ヘッダー（折り畳みトグル） */}
       <button
         onClick={() => setIsOpen(!isOpen)}
