@@ -114,7 +114,7 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
             >
               <h3 className="text-xl font-bold text-zinc-100">本当に転生しますか？</h3>
 
-              <p className="text-sm text-zinc-400 space-y-2">
+              <div className="text-sm text-zinc-400 space-y-2">
                 <div>
                   以下の内容が
                   <span className="text-red-400 font-semibold">リセット</span>
@@ -125,9 +125,9 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                   <li>今日の完了数</li>
                   <li>コンボ</li>
                 </ul>
-              </p>
+              </div>
 
-              <p className="text-sm text-zinc-400 space-y-2">
+              <div className="text-sm text-zinc-400 space-y-2">
                 <div>
                   以下の内容は
                   <span className="text-amber-400 font-semibold">保持</span>
@@ -138,7 +138,7 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                   <li>転生回数（+1）</li>
                   <li>Black Hole アーカイブ</li>
                 </ul>
-              </p>
+              </div>
 
               {/* ボタン */}
               <div className="flex gap-3 pt-4">

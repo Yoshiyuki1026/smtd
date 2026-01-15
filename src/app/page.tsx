@@ -21,7 +21,7 @@ import { ProcrastinationBreakthrough } from '@/components/ProcrastinationBreakth
 import { Onboarding } from '@/components/Onboarding';
 import { AuthModal } from '@/components/AuthModal';
 import { Settings } from '@/components/Settings';
-import { DiamondPile } from '@/components/DiamondPile';
+// DiamondPile は CompletedToday 内で表示（重複防止）
 
 export default function Home() {
   const { checkDateChange, focusTask } = useTaskStore();
@@ -94,7 +94,7 @@ export default function Home() {
                   user ? (
                     <div className="flex items-center gap-2">
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-bold">
-                        {user.email?.[0].toUpperCase()}
+                        {(user.email?.[0] || '?').toUpperCase()}
                       </div>
                       <button
                         onClick={signOut}
@@ -159,9 +159,6 @@ export default function Home() {
             {/* コンテンツ */}
             {bottomTab === 'completed' ? <CompletedToday /> : <BlackHole />}
           </section>
-
-          {/* 物理演算ダイヤ（完了タスクが石として蓄積） */}
-          <DiamondPile />
 
           {/* フッター */}
           <footer className="mt-12 text-center text-xs text-zinc-600">

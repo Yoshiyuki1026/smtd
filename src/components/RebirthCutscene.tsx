@@ -67,6 +67,8 @@ export function RebirthCutscene({ isOpen, onClose, rebirthCount }: RebirthCutsce
 
   useEffect(() => {
     if (!isOpen) {
+      // カットシーンが閉じたらshowTextをリセット
+      setShowText(false);
       return;
     }
 

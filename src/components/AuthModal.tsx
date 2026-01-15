@@ -19,6 +19,16 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [error, setError] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
 
+  // モーダルを閉じる時にフォームをリセット
+  const handleClose = () => {
+    setEmail('')
+    setPassword('')
+    setError('')
+    setIsLoading(false)
+    setMode('signin')
+    onClose()
+  }
+
   if (!isOpen) return null
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,7 +63,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       <div className="relative w-full max-w-md rounded-lg border border-zinc-700 bg-zinc-900 p-6 shadow-xl">
         {/* Close button */}
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute right-4 top-4 text-zinc-400 hover:text-zinc-100 transition-colors"
         >
           <X size={24} />
