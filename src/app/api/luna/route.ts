@@ -113,9 +113,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ line: fallbackLine, source: 'fallback' });
     }
 
-    // 時刻情報
+    // 時刻情報（JST変換）
     const now = new Date();
-    const hour = now.getHours();
+    const jstHour = parseInt(now.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo', hour: 'numeric', hour12: false }));
+    const hour = jstHour;
     const timeContext = hour >= 0 && hour < 5 ? '深夜' :
                         hour < 12 ? '午前' :
                         hour < 18 ? '午後' : '夜';
