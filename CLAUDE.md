@@ -25,6 +25,15 @@ npm run lint   # ESLint実行
 
 ---
 
+## デプロイ
+
+**Cloudflare Pages** + GitHub Actions 自動デプロイ。
+
+- mainブランチへのマージで自動デプロイ
+- 手動: `npm run pages:deploy`
+
+---
+
 ## 技術スタック
 
 | レイヤー | 選定 |
@@ -38,7 +47,7 @@ npm run lint   # ESLint実行
 | Sound | use-sound |
 | Data (Phase 1) | localStorage / IndexedDB |
 | Data (Phase 2+) | Supabase |
-| Deploy | Vercel |
+| Deploy | Cloudflare Pages |
 
 ---
 
@@ -147,6 +156,19 @@ src/
 3. **Tailwind優先**: CSS-in-JSより先にTailwindで試す
 4. **派手な演出を恐れるな**: ドーパミンが出るかどうかが判断基準
 5. **ダークモード必須**: 黒背景でStarlightが映える
+
+---
+
+## PRフロー（必須）
+
+機能追加・バグ修正後は必ず以下のフローを実行：
+
+1. `/preq` - PR作成
+2. `/check-pr` - CodeRabbit/Qodo/Codexのレビュー確認
+3. レビュー指摘を修正
+4. マージ → 自動デプロイ
+
+**こまめにPR出してレビュー受ける**ことで品質を担保。
 
 ---
 
