@@ -12,6 +12,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { FocusSection } from '@/components/FocusSection';
 import { BacklogSection } from '@/components/BacklogSection';
 import { CompletedToday } from '@/components/CompletedToday';
+import { BlackHole } from '@/components/BlackHole';
 import { GoalCounter } from '@/components/GoalCounter';
 import { TaskInput } from '@/components/TaskInput';
 import { LunaBar } from '@/components/LunaBar';
@@ -24,6 +25,7 @@ export default function Home() {
   const { checkDateChange, focusTask } = useTaskStore();
   const { user, isLoading: authLoading, signOut } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [bottomTab, setBottomTab] = useState<'completed' | 'blackhole'>('completed');
 
   // ドラッグ終了時のハンドラ
   const handleDragEnd = (event: DragEndEvent) => {
@@ -111,8 +113,35 @@ export default function Home() {
           {/* 控え室（折りたたみ式） */}
           <BacklogSection />
 
-          {/* 完了タスク（折りたたみ式） */}
-          <CompletedToday />
+          {/* ボトムタブ: 完了タスク / Black Hole */}
+          <section className="mb-6">
+            {/* タブ */}
+            <div className="flex gap-2 border-b border-zinc-700 mb-4">
+              <button
+                onClick={() => setBottomTab('completed')}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  bottomTab === 'completed'
+                    ? 'text-purple-500 border-b-2 border-purple-500'
+                    : 'text-zinc-500 hover:text-zinc-400'
+                }`}
+              >
+                完了タスク
+              </button>
+              <button
+                onClick={() => setBottomTab('blackhole')}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  bottomTab === 'blackhole'
+                    ? 'text-purple-500 border-b-2 border-purple-500'
+                    : 'text-zinc-500 hover:text-zinc-400'
+                }`}
+              >
+                Black Hole
+              </button>
+            </div>
+
+            {/* コンテンツ */}
+            {bottomTab === 'completed' ? <CompletedToday /> : <BlackHole />}
+          </section>
 
           {/* フッター */}
           <footer className="mt-12 text-center text-xs text-zinc-600">
