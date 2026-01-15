@@ -2,7 +2,7 @@
 
 // ===========================================
 // Onboarding - 初回起動ツールチップガイド
-// 3ステップ: タスク追加 → 昇格 → 完了
+// 4ステップ: キャラ選択 → タスク追加 → 昇格 → 完了
 // Industrial Noir Theme
 // ===========================================
 
@@ -12,14 +12,14 @@ import { ChevronRight, Plus } from 'lucide-react';
 import { useTaskStore } from '@/stores/taskStore';
 import Image from 'next/image';
 
-type Step = 1 | 2 | 3;
+type Step = 0 | 1 | 2 | 3;
 
 export function Onboarding() {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState<Step>(1);
+  const [currentStep, setCurrentStep] = useState<Step>(0);
   const [isMounted, setIsMounted] = useState(false);
   const [taskInput, setTaskInput] = useState('');
-  const { addTask } = useTaskStore();
+  const { addTask, navigatorMode, setNavigatorMode } = useTaskStore();
 
   // Hydration対策: クライアント側でのみレンダリング + localStorageチェック
   useEffect(() => {
@@ -48,6 +48,12 @@ export function Onboarding() {
       targetElement?: 'task-input' | 'backlog-section' | 'focus-section';
     }
   > = {
+    0: {
+      title: 'あなたの相棒を選んでね',
+      description: 'どちらのキャラクターと一緒にタスクをこなす？',
+      hint: 'いつでも切り替えられるから、直感で選んでOK！',
+      icon: '🎭',
+    },
     1: {
       title: 'タスクを追加してみよう',
       description:
@@ -105,9 +111,18 @@ export function Onboarding() {
 
   // ルナのセリフ（ステップ別）
   const lunaLines: Record<Step, string> = {
+    0: '', // Step 0はキャラ選択画面なのでセリフなし
     1: 'ねえ、まだ寝てるの？ 私はもう準備できてるんだけど。まず1つやってみなよ。',
     2: 'へえ、追加できたじゃん。控え室から「今やること」に上げて、集中しよ？',
     3: '完了したらタップ。それがあんたの資産になるんだよ。センス見せてね。',
+  };
+
+  // ボスのセリフ（ステップ別）
+  const bossLines: Record<Step, string> = {
+    0: '', // Step 0はキャラ選択画面なのでセリフなし
+    1: '……ん？ああ、悪い。二日酔いだ。……で、今日の仕事は？',
+    2: 'いいセンスだ。控え室から上げて、集中しろ。',
+    3: '完了したらタップだ。それがお前の資産になる。',
   };
 
   return (
@@ -132,10 +147,10 @@ export function Onboarding() {
             {/* ステップ表示 */}
             <div className="mb-6 flex items-center justify-between">
               <span className="text-sm font-medium text-amber-400">
-                ステップ {currentStep} / 3
+                ステップ {currentStep + 1} / 4
               </span>
               <div className="flex gap-1">
-                {[1, 2, 3].map((i) => (
+                {[0, 1, 2, 3].map((i) => (
                   <div
                     key={i}
                     className={`h-1 w-6 rounded-full transition-colors ${
@@ -148,24 +163,87 @@ export function Onboarding() {
               </div>
             </div>
 
-            {/* ルナのナビゲーション */}
-            <div className="mb-6 flex items-start gap-4 rounded-lg bg-purple-900/20 border border-purple-500/30 p-4">
-              <div className="shrink-0">
-                <Image
-                  src="/luna-avatar-v6.png"
-                  alt="Luna"
-                  width={56}
-                  height={56}
-                  className="rounded-full border-2 border-cyan-500/50"
-                />
+            {/* Step 0: キャラクター選択 */}
+            {currentStep === 0 && (
+              <div className="mb-6 grid grid-cols-2 gap-4">
+                {/* ルナカード */}
+                <button
+                  onClick={() => {
+                    setNavigatorMode('cats');
+                    handleNext();
+                  }}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    navigatorMode === 'cats'
+                      ? 'border-cyan-500 bg-cyan-500/10'
+                      : 'border-zinc-700 bg-zinc-800/50 hover:border-cyan-500/50'
+                  }`}
+                >
+                  <Image
+                    src="/luna-avatar-v6.png"
+                    alt="Luna"
+                    width={80}
+                    height={80}
+                    className="mx-auto rounded-full border-2 border-cyan-500/50 mb-3"
+                  />
+                  <p className="text-cyan-400 font-bold text-lg">ルナ 🐾</p>
+                  <p className="text-xs text-zinc-400 mt-1">天才肌で生意気</p>
+                </button>
+
+                {/* ボスカード */}
+                <button
+                  onClick={() => {
+                    setNavigatorMode('dogs');
+                    handleNext();
+                  }}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    navigatorMode === 'dogs'
+                      ? 'border-amber-500 bg-amber-500/10'
+                      : 'border-zinc-700 bg-zinc-800/50 hover:border-amber-500/50'
+                  }`}
+                >
+                  <Image
+                    src="/boss-avatar.png"
+                    alt="Boss"
+                    width={80}
+                    height={80}
+                    className="mx-auto rounded-full border-2 border-amber-600/50 mb-3"
+                  />
+                  <p className="text-amber-400 font-bold text-lg">ボス 🐺</p>
+                  <p className="text-xs text-zinc-400 mt-1">歴戦の傭兵、渋い</p>
+                </button>
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-cyan-300 mb-1">ルナ</p>
-                <p className="text-sm text-zinc-300 leading-relaxed">
-                  {lunaLines[currentStep]}
-                </p>
+            )}
+
+            {/* Step 1以降: キャラクターのナビゲーション */}
+            {currentStep > 0 && (
+              <div className={`mb-6 flex items-start gap-4 rounded-lg p-4 ${
+                navigatorMode === 'dogs'
+                  ? 'bg-amber-900/20 border border-amber-700/40'
+                  : 'bg-purple-900/20 border border-purple-500/30'
+              }`}>
+                <div className="shrink-0">
+                  <Image
+                    src={navigatorMode === 'dogs' ? '/boss-avatar.png' : '/luna-avatar-v6.png'}
+                    alt={navigatorMode === 'dogs' ? 'Boss' : 'Luna'}
+                    width={56}
+                    height={56}
+                    className={`rounded-full border-2 ${
+                      navigatorMode === 'dogs' ? 'border-amber-600/50' : 'border-cyan-500/50'
+                    }`}
+                  />
+                </div>
+                <div className="flex-1">
+                  <p className={`text-sm font-medium mb-1 ${
+                    navigatorMode === 'dogs' ? 'text-amber-400' : 'text-cyan-300'
+                  }`}>
+                    {navigatorMode === 'dogs' ? 'ボス' : 'ルナ'}
+                  </p>
+                  <p className="text-sm text-zinc-300 leading-relaxed">
+                    {navigatorMode === 'dogs' ? bossLines[currentStep] : lunaLines[currentStep]}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* アイコン + タイトル */}
             <div className="mb-4 flex items-start gap-3">
@@ -213,8 +291,18 @@ export function Onboarding() {
 
             {/* ボタン群 */}
             <div className="flex gap-3">
-              {/* スキップボタン */}
-              {currentStep < 3 && (
+              {/* Step 0: スキップのみ（キャラ選択で自動進行） */}
+              {currentStep === 0 && (
+                <button
+                  onClick={handleSkip}
+                  className="w-full rounded-lg bg-zinc-800 border border-zinc-700 py-3 text-sm text-zinc-400 hover:bg-zinc-700 transition-colors font-medium"
+                >
+                  スキップ（ルナで始める）
+                </button>
+              )}
+
+              {/* スキップボタン（Step 1-2） */}
+              {currentStep > 0 && currentStep < 3 && (
                 <button
                   onClick={handleSkip}
                   className="flex-1 rounded-lg bg-zinc-800 border border-zinc-700 py-3 text-sm text-zinc-400 hover:bg-zinc-700 transition-colors font-medium"
@@ -224,7 +312,7 @@ export function Onboarding() {
               )}
 
               {/* 次へボタン（Step 1-2） */}
-              {currentStep < 3 && (
+              {currentStep > 0 && currentStep < 3 && (
                 <button
                   onClick={handleNext}
                   className="flex-1 rounded-lg bg-amber-500/20 border border-amber-500/40 py-3 text-sm text-amber-400 hover:bg-amber-500/30 transition-colors font-bold flex items-center justify-center gap-2"
