@@ -24,6 +24,7 @@ export interface GameState {
   combo: number;             // 現在のコンボ数
   lastCompletedAt?: string;  // 最後にタスク完了した日時
   todayDate: string;         // 今日の日付（YYYY-MM-DD）
+  rebirthCount: number;      // 転生回数
 }
 
 /**
@@ -68,3 +69,14 @@ export interface Reward {
  * - evening: 夜21時（振り返り）
  */
 export type SlackContext = 'morning' | 'midday' | 'evening';
+
+/**
+ * Black Holeアイテム（Brain Dump）
+ * 思いついたことを投げ込み、アーカイブまたは廃棄する
+ */
+export interface BlackHoleItem {
+  id: string;
+  content: string;
+  createdAt: string;    // ISO8601
+  archived: boolean;    // true=アーカイブ済み
+}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/providers/AuthProvider";
 
 // Industrial Noir Typography
 const jetbrainsMono = JetBrains_Mono({
@@ -27,7 +28,9 @@ export default function RootLayout({
       <body
         className={`${jetbrainsMono.variable} antialiased noise-bg scanlines`}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

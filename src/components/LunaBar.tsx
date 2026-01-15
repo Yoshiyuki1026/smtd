@@ -29,14 +29,24 @@ export function LunaBar() {
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasFiredIdleRef = useRef(false);
   const lastFetchTimeRef = useRef<number>(0);  // セリフ取得時刻（クールダウン用）
+  const abortControllerRef = useRef<AbortController | null>(null);  // 並列fetch防止用
 
   // Hydration対策: クライアント側でのみレンダリング
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // セリフを取得
+  // セリフを取得（AbortController付き）
   const fetchLine = useCallback(async (context: LunaContext, taskTitle?: string | null) => {
+    // 前回のリクエストをキャンセル
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // 新しいAbortControllerを作成
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setIsLoading(true);
     setCurrentLine('...');
 
@@ -48,6 +58,7 @@ export function LunaBar() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode: lunaMode, context, taskTitle }),
+        signal: controller.signal,
       });
 
       if (response.ok) {
@@ -62,6 +73,10 @@ export function LunaBar() {
         setCurrentLine('...（ちょっと待って）');
       }
     } catch (error) {
+      // キャンセルによるエラーは無視
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
       console.error('Failed to fetch Luna line:', error);
       setCurrentLine('...（ちょっと待って）');
     } finally {
@@ -150,6 +165,10 @@ export function LunaBar() {
     return () => {
       if (idleTimerRef.current) {
         clearTimeout(idleTimerRef.current);
+      }
+      // 進行中のfetchをキャンセル
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
     };
   }, []);

@@ -5,7 +5,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Task, GameState, LunaMode, LunaContext, Reward } from '@/types';
+import type { Task, GameState, LunaMode, LunaContext, Reward, BlackHoleItem } from '@/types';
 
 // ユニークID生成
 const generateId = () => Math.random().toString(36).substring(2, 9);
@@ -36,6 +36,7 @@ interface TaskStore {
   // ゲーム状態
   gameState: GameState;
   checkDateChange: () => void;
+  rebirth: () => void;
 
   // ナビゲーターモード（CATS/DOGS切り替え）
   navigatorMode: NavigatorMode;
@@ -51,6 +52,12 @@ interface TaskStore {
   // 報酬演出
   lastReward: Reward | null;
   clearReward: () => void;
+
+  // Black Hole（Brain Dump）
+  blackHole: BlackHoleItem[];
+  addToBlackHole: (content: string) => void;
+  archiveBlackHoleItem: (id: string) => void;
+  deleteBlackHoleItem: (id: string) => void;
 }
 
 export const useTaskStore = create<TaskStore>()(
@@ -173,6 +180,7 @@ export const useTaskStore = create<TaskStore>()(
         totalStones: 0,
         combo: 0,
         todayDate: getTodayDate(),
+        rebirthCount: 0,
       },
 
       checkDateChange: () => {
@@ -195,6 +203,28 @@ export const useTaskStore = create<TaskStore>()(
             lunaContext: 'ignition',
           });
         }
+      },
+
+      rebirth: () => {
+        const { gameState, blackHole } = get();
+
+        // Black Holeのアーカイブ済みアイテムのみ保持、未アーカイブは削除
+        const archivedBlackHole = blackHole.filter((item) => item.archived);
+
+        set({
+          tasks: [],
+          gameState: {
+            completedToday: 0,
+            totalStones: gameState.totalStones,  // 保持
+            combo: 0,
+            todayDate: getTodayDate(),
+            rebirthCount: gameState.rebirthCount + 1,  // インクリメント
+            lastCompletedAt: undefined,
+          },
+          blackHole: archivedBlackHole,
+          lunaMode: 'standard',
+          lunaContext: 'ignition',
+        });
       },
 
       // ===========================================
@@ -222,6 +252,42 @@ export const useTaskStore = create<TaskStore>()(
       lastReward: null,
 
       clearReward: () => set({ lastReward: null }),
+
+      // ===========================================
+      // Black Hole（Brain Dump）
+      // ===========================================
+      blackHole: [],
+
+      addToBlackHole: (content: string) => {
+        const { blackHole } = get();
+
+        const newItem: BlackHoleItem = {
+          id: generateId(),
+          content: content.trim(),
+          createdAt: new Date().toISOString(),
+          archived: false,
+        };
+
+        set({ blackHole: [...blackHole, newItem] });
+      },
+
+      archiveBlackHoleItem: (id: string) => {
+        const { blackHole } = get();
+
+        set({
+          blackHole: blackHole.map((item) =>
+            item.id === id ? { ...item, archived: true } : item
+          ),
+        });
+      },
+
+      deleteBlackHoleItem: (id: string) => {
+        const { blackHole } = get();
+
+        set({
+          blackHole: blackHole.filter((item) => item.id !== id),
+        });
+      },
     }),
     {
       name: 'smtd-storage',
@@ -229,6 +295,7 @@ export const useTaskStore = create<TaskStore>()(
         tasks: state.tasks,
         gameState: state.gameState,
         navigatorMode: state.navigatorMode,
+        blackHole: state.blackHole,
       }),
     }
   )
