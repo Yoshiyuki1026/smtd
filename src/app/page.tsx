@@ -20,11 +20,13 @@ import { RewardEffect } from '@/components/RewardEffect';
 import { ProcrastinationBreakthrough } from '@/components/ProcrastinationBreakthrough';
 import { Onboarding } from '@/components/Onboarding';
 import { AuthModal } from '@/components/AuthModal';
+import { Settings } from '@/components/Settings';
 
 export default function Home() {
   const { checkDateChange, focusTask } = useTaskStore();
   const { user, isLoading: authLoading, signOut } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [bottomTab, setBottomTab] = useState<'completed' | 'blackhole'>('completed');
 
   // ドラッグ終了時のハンドラ
@@ -64,8 +66,11 @@ export default function Home() {
         {/* 認証モーダル */}
         <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
 
+        {/* 設定モーダル */}
+        <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+
         <main className="mx-auto max-w-lg px-4 py-8">
-          {/* ヘッダー: タイトル + ゴールカウンター + 認証 */}
+          {/* ヘッダー: タイトル + ゴールカウンター + 認証 + 設定 */}
           <header className="mb-6">
             <div className="flex items-center justify-between mb-2">
               <h1 className="text-2xl font-bold tracking-tight">
@@ -73,29 +78,40 @@ export default function Home() {
                   Supermassive Task Drive
                 </span>
               </h1>
-              {/* 認証ボタン */}
-              {!authLoading && (
-                user ? (
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-bold">
-                      {user.email?.[0].toUpperCase()}
+              <div className="flex items-center gap-2">
+                {/* 設定ボタン */}
+                <button
+                  onClick={() => setIsSettingsOpen(true)}
+                  className="text-xl p-2 rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
+                  title="設定"
+                >
+                  ⚙️
+                </button>
+
+                {/* 認証ボタン */}
+                {!authLoading && (
+                  user ? (
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-bold">
+                        {user.email?.[0].toUpperCase()}
+                      </div>
+                      <button
+                        onClick={signOut}
+                        className="text-xs px-3 py-1 rounded-md bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors"
+                      >
+                        ログアウト
+                      </button>
                     </div>
+                  ) : (
                     <button
-                      onClick={signOut}
-                      className="text-xs px-3 py-1 rounded-md bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors"
+                      onClick={() => setIsAuthModalOpen(true)}
+                      className="text-xs px-3 py-1 rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors"
                     >
-                      ログアウト
+                      ログイン
                     </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setIsAuthModalOpen(true)}
-                    className="text-xs px-3 py-1 rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors"
-                  >
-                    ログイン
-                  </button>
-                )
-              )}
+                  )
+                )}
+              </div>
             </div>
             {/* ゴールカウンター（ヘッダー統合） */}
             <GoalCounter />

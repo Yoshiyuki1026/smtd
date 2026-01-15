@@ -36,6 +36,7 @@ interface TaskStore {
   // ゲーム状態
   gameState: GameState;
   checkDateChange: () => void;
+  rebirth: () => void;
 
   // ナビゲーターモード（CATS/DOGS切り替え）
   navigatorMode: NavigatorMode;
@@ -179,6 +180,7 @@ export const useTaskStore = create<TaskStore>()(
         totalStones: 0,
         combo: 0,
         todayDate: getTodayDate(),
+        rebirthCount: 0,
       },
 
       checkDateChange: () => {
@@ -201,6 +203,28 @@ export const useTaskStore = create<TaskStore>()(
             lunaContext: 'ignition',
           });
         }
+      },
+
+      rebirth: () => {
+        const { gameState, blackHole } = get();
+
+        // Black Holeのアーカイブ済みアイテムのみ保持、未アーカイブは削除
+        const archivedBlackHole = blackHole.filter((item) => item.archived);
+
+        set({
+          tasks: [],
+          gameState: {
+            completedToday: 0,
+            totalStones: gameState.totalStones,  // 保持
+            combo: 0,
+            todayDate: getTodayDate(),
+            rebirthCount: gameState.rebirthCount + 1,  // インクリメント
+            lastCompletedAt: undefined,
+          },
+          blackHole: archivedBlackHole,
+          lunaMode: 'standard',
+          lunaContext: 'ignition',
+        });
       },
 
       // ===========================================

@@ -24,6 +24,7 @@ export interface GameState {
   combo: number;             // 現在のコンボ数
   lastCompletedAt?: string;  // 最後にタスク完了した日時
   todayDate: string;         // 今日の日付（YYYY-MM-DD）
+  rebirthCount: number;      // 転生回数
 }
 
 /**
