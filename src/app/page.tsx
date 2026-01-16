@@ -29,7 +29,7 @@ export default function Home() {
   const { user, isLoading: authLoading, signOut } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [bottomTab, setBottomTab] = useState<'completed' | 'blackhole'>('completed');
+  const [activeSection, setActiveSection] = useState<'backlog' | 'completed' | 'blackhole'>('backlog');
 
   // ドラッグ終了時のハンドラ
   const handleDragEnd = (event: DragEndEvent) => {
@@ -131,25 +131,35 @@ export default function Home() {
           {/* 控え室（折りたたみ式） */}
           <BacklogSection />
 
-          {/* ボトムタブ: 完了タスク / Black Hole */}
+          {/* セクションタブ: 控え室 / 完了タスク / Black Hole */}
           <section className="mb-6">
-            {/* タブ */}
+            {/* タブバー */}
             <div className="flex gap-2 border-b border-zinc-700 mb-4">
               <button
-                onClick={() => setBottomTab('completed')}
+                onClick={() => setActiveSection('backlog')}
                 className={`px-4 py-2 text-sm font-medium transition-colors ${
-                  bottomTab === 'completed'
-                    ? 'text-purple-500 border-b-2 border-purple-500'
+                  activeSection === 'backlog'
+                    ? 'border-b-2 border-amber-500 text-amber-500'
+                    : 'text-zinc-500 hover:text-zinc-400'
+                }`}
+              >
+                控え室
+              </button>
+              <button
+                onClick={() => setActiveSection('completed')}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  activeSection === 'completed'
+                    ? 'border-b-2 border-amber-500 text-amber-500'
                     : 'text-zinc-500 hover:text-zinc-400'
                 }`}
               >
                 完了タスク
               </button>
               <button
-                onClick={() => setBottomTab('blackhole')}
+                onClick={() => setActiveSection('blackhole')}
                 className={`px-4 py-2 text-sm font-medium transition-colors ${
-                  bottomTab === 'blackhole'
-                    ? 'text-purple-500 border-b-2 border-purple-500'
+                  activeSection === 'blackhole'
+                    ? 'border-b-2 border-amber-500 text-amber-500'
                     : 'text-zinc-500 hover:text-zinc-400'
                 }`}
               >
@@ -157,8 +167,10 @@ export default function Home() {
               </button>
             </div>
 
-            {/* コンテンツ */}
-            {bottomTab === 'completed' ? <CompletedToday /> : <BlackHole />}
+            {/* コンテンツ（排他的に表示） */}
+            {activeSection === 'backlog' && <BacklogSection />}
+            {activeSection === 'completed' && <CompletedToday />}
+            {activeSection === 'blackhole' && <BlackHole />}
           </section>
 
           {/* フッター */}
