@@ -19,7 +19,7 @@ const IDLE_TIMEOUT = 5 * 60 * 1000;
 const VISIBILITY_COOLDOWN = 3 * 60 * 1000;
 
 export function LunaBar() {
-  const { lunaContext, lunaMode, lunaTaskTitle, navigatorMode, setNavigatorMode } = useTaskStore();
+  const { lunaContext, lunaMode, lunaTaskTitle, navigatorMode, setNavigatorMode, tasks } = useTaskStore();
   const isDogs = navigatorMode === 'dogs';
   const [mounted, setMounted] = useState(false);
   const [currentLine, setCurrentLine] = useState('...');
@@ -53,11 +53,18 @@ export function LunaBar() {
     // モードに応じてAPIエンドポイントを切り替え
     const endpoint = isDogs ? '/api/boss' : '/api/luna';
 
+    // 完了タスクを抽出（completedAt降順で直近10件）
+    const completedTasks = [...tasks]
+      .filter(t => t.completed && t.completedAt)
+      .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())
+      .slice(0, 10)
+      .map(t => ({ title: t.title, completedAt: t.completedAt! }));
+
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: lunaMode, context, taskTitle }),
+        body: JSON.stringify({ mode: lunaMode, context, taskTitle, completedTasks }),
         signal: controller.signal,
       });
 
@@ -82,7 +89,7 @@ export function LunaBar() {
     } finally {
       setIsLoading(false);
     }
-  }, [lunaMode, isDogs]);
+  }, [lunaMode, isDogs, tasks]);
 
   // idleタイマーをリセット
   const resetIdleTimer = useCallback(() => {
