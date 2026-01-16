@@ -46,7 +46,7 @@ export function TaskInput() {
         <button
           type="submit"
           disabled={!inputValue.trim()}
-          className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-500 transition-colors hover:bg-amber-500/30 disabled:opacity-30 disabled:cursor-not-allowed focus:ring-2 focus:ring-amber-400"
+          className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-500 transition-colors hover:bg-amber-500/30 disabled:opacity-30 disabled:cursor-not-allowed focus:ring-2 focus:ring-amber-400 active:scale-95 active:ring-2 active:ring-amber-400/50"
           aria-label="追加"
         >
           <Plus size={24} />

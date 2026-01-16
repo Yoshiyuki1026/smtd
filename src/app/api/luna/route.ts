@@ -50,6 +50,7 @@ const SYSTEM_PROMPT = `あなたは「ルナ」というキャラクターです
 const CONTEXT_PROMPTS: Record<LunaContext, string> = {
   ignition: 'アプリを起動した時の挨拶。「おはよう」「さあ始めよう」的なニュアンスで。',
   success: 'タスクを完了した時の褒め言葉。タスク名が渡されたら、その内容に触れて具体的に褒める。ちょっと上から目線で。',
+  rare_success: 'レアな完了！特別な瞬間を祝福。テンション高めで褒めちぎる。キラキラ感を出す。',
   failure: 'タスクを削除（サボった）時。タスク名が渡されたら、その内容に触れつつ笑いながら許す。責めない。',
   idle: '何もしていない時。暇そうに話しかける。',
   bond: '深夜や長時間作業の時。労いと優しさ。',
@@ -69,6 +70,7 @@ const CONTEXT_PROMPTS: Record<LunaContext, string> = {
 const FALLBACK_LINES: Record<LunaContext, string[]> = {
   ignition: ['おはよ。今日も走るで？', 'エンジン、かかっとるで。'],
   success: ['やるやん。ちょっと見直したわ。', 'ええセンスしとるな。'],
+  rare_success: ['うわ、これ特別やん！', 'キラキラしとる！ 特別な瞬間やな。'],
   failure: ['あはは、やめたんか。まあええけど。', 'サボりも休憩のうちやで。'],
   idle: ['暇なんか？', 'なんかせえへんの？'],
   bond: ['こんな時間までおるん？', '無理せんでええんやで。'],

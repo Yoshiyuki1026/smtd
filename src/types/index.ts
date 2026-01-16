@@ -38,12 +38,13 @@ export type LunaMode = 'standard' | 'entertained';
  * ルナのコンテキスト（セリフカテゴリ）
  * - ignition: エンジン始動（アプリ起動時）
  * - success: タスク完了時
+ * - rare_success: レアタスク完了時（10%の確率）
  * - failure: タスク削除時
  * - idle: 待機中
  * - bond: 連星の絆（深夜帯、長時間放置）
  * - breakthrough: 先延ばしブレイクスルー（叱咤激励）
  */
-export type LunaContext = 'ignition' | 'success' | 'failure' | 'idle' | 'bond' | 'breakthrough';
+export type LunaContext = 'ignition' | 'success' | 'rare_success' | 'failure' | 'idle' | 'bond' | 'breakthrough';
 
 /**
  * ルナの状態
@@ -60,6 +61,7 @@ export interface LunaState {
 export interface Reward {
   points: number;
   combo: number;
+  isRare?: boolean;  // 10%でレア演出
 }
 
 /**

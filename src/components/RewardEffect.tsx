@@ -20,16 +20,27 @@ const CONFETTI_COLORS = [
   '#78350f', // amber-900 (dark ember)
 ];
 
+// レア演出用の虹色パレット
+const RAINBOW_COLORS = [
+  '#ff0000', // 赤
+  '#ff7f00', // オレンジ
+  '#ffff00', // 黄
+  '#00ff00', // 緑
+  '#0000ff', // 青
+  '#8b00ff', // 紫
+];
+
 export function RewardEffect() {
   const { lastReward, clearReward } = useTaskStore();
 
   // 紙吹雪を発射
-  const fireConfetti = useCallback(() => {
-    const count = 200;
+  const fireConfetti = useCallback((isRare: boolean = false) => {
+    const count = isRare ? 300 : 200;  // レア時は多め
+    const colors = isRare ? RAINBOW_COLORS : CONFETTI_COLORS;
     const defaults = {
       origin: { y: 0.7 },
       zIndex: 9999,
-      colors: CONFETTI_COLORS,
+      colors,
     };
 
     const fire = (particleRatio: number, opts: confetti.Options) => {
@@ -68,17 +79,33 @@ export function RewardEffect() {
       startVelocity: 45,
       origin: { x: 0.5, y: 0.7 },
     });
+
+    // レア時は追加で星形パーティクルを中央から発射
+    if (isRare) {
+      setTimeout(() => {
+        confetti({
+          particleCount: 50,
+          spread: 360,
+          origin: { y: 0.5, x: 0.5 },
+          shapes: ['star'],
+          colors: RAINBOW_COLORS,
+          scalar: 1.5,
+          zIndex: 9999,
+        });
+      }, 200);
+    }
   }, []);
 
   // 報酬発生時に演出
   useEffect(() => {
     if (lastReward) {
-      fireConfetti();
+      fireConfetti(lastReward.isRare);
 
-      // 2秒後にクリア
+      // レア時は少し長め（2.5秒）、通常は2秒
+      const duration = lastReward.isRare ? 2500 : 2000;
       const timer = setTimeout(() => {
         clearReward();
-      }, 2000);
+      }, duration);
 
       return () => clearTimeout(timer);
     }

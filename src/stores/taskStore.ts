@@ -149,6 +149,9 @@ export const useTaskStore = create<TaskStore>()(
         const points = 1000 * newCombo;
         const now = new Date().toISOString();
 
+        // 10%の確率でレア判定
+        const isRare = Math.random() < 0.1;
+
         // タスク更新（完了時にfocusedも解除）
         const updatedTasks = tasks.map((t) =>
           t.id === id
@@ -172,9 +175,9 @@ export const useTaskStore = create<TaskStore>()(
             lastCompletedAt: now,
           },
           lunaMode: 'standard',
-          lunaContext: 'success',
+          lunaContext: isRare ? 'rare_success' : 'success',  // レア時は特別なコンテキスト
           lunaTaskTitle: task.title,  // タスク名を保存
-          lastReward: { points, combo: newCombo },
+          lastReward: { points, combo: newCombo, isRare },  // isRare追加
           rewardHistory: newHistory,
         });
       },

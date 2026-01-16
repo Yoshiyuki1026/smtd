@@ -89,7 +89,7 @@ export function FocusSection() {
                   {/* 完了ボタン（タッチターゲット最適化: 40px） */}
                   <button
                     onClick={() => completeTask(task.id)}
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full ring-amber text-amber-500 transition-all hover:text-black focus:ring-2 focus:ring-amber-400"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full ring-amber text-amber-500 transition-all hover:text-black focus:ring-2 focus:ring-amber-400 active:scale-95 active:ring-2 active:ring-amber-400/50"
                     aria-label="タスクを完了"
                   >
                     <Check size={20} />
@@ -103,7 +103,7 @@ export function FocusSection() {
                   {/* 控え室に戻すボタン（タッチターゲット最適化: 40px） */}
                   <button
                     onClick={() => unfocusTask(task.id)}
-                    className="flex h-10 w-10 items-center justify-center rounded-lg text-zinc-500 opacity-0 transition-all hover:bg-zinc-700 hover:text-zinc-300 group-hover:opacity-100 focus:opacity-100 focus:ring-2 focus:ring-amber-400"
+                    className="flex h-10 w-10 items-center justify-center rounded-lg text-zinc-500 opacity-0 transition-all hover:bg-zinc-700 hover:text-zinc-300 group-hover:opacity-100 focus:opacity-100 focus:ring-2 focus:ring-amber-400 active:scale-95 active:ring-2 active:ring-zinc-400/50"
                     aria-label="控え室に戻す"
                     title="控え室に戻す"
                   >
