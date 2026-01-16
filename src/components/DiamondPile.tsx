@@ -66,11 +66,14 @@ export const DiamondPile: React.FC = () => {
     }
 
     // 新しいダイヤを作成（上から落下）
-    const body = Matter.Bodies.circle(Math.random() * (width - 40) + 20, -20, 12, {
+    const body = Matter.Bodies.circle(Math.random() * (width - 40) + 20, -100, 12, {
       restitution: 0.6,
       friction: 0.3,
       frictionAir: 0.01,
     });
+
+    // 下向きの初速度を設定して勢いをつける
+    Matter.Body.setVelocity(body, { x: 0, y: 10 });
 
     Matter.World.add(engine.world, body);
     stonesRef.current.push({ body, createdAt: Date.now() });
