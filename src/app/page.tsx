@@ -128,9 +128,6 @@ export default function Home() {
           {/* タスク追加（常時表示） */}
           <TaskInput />
 
-          {/* 控え室（折りたたみ式） */}
-          <BacklogSection />
-
           {/* セクションタブ: 控え室 / 完了タスク / Black Hole */}
           <section className="mb-6">
             {/* タブバー */}

@@ -171,9 +171,9 @@ export async function POST(request: Request) {
                         hour < 12 ? '午前' :
                         hour < 18 ? '午後' : '夜';
 
-    // タスク履歴コンテキスト生成
+    // タスク履歴コンテキスト生成（null guard追加）
     const taskHistoryContext = completedTasks && completedTasks.length > 0
-      ? `\n\n【最近の完了タスク】\n${completedTasks.slice(0, 5).map((t: { title: string; completedAt: string }) => `- ${t.title}`).join('\n')}\n【今日の達成数】${completedTasks.length}個`
+      ? `\n\n【最近の完了タスク】\n${completedTasks.slice(0, 5).map((t) => `- ${t?.title || '(untitled)'}`).join('\n')}\n【今日の達成数】${completedTasks.length}個`
       : '';
 
     // ユーザープロンプト組み立て
