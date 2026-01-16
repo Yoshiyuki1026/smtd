@@ -174,7 +174,7 @@ export async function POST(request: Request) {
 
     // タスク履歴コンテキスト生成（null guard追加）
     const taskHistoryContext = completedTasks && completedTasks.length > 0
-      ? `\n\n【最近の完了タスク】\n${completedTasks.slice(0, 5).map((t) => `- ${t?.title || '(untitled)'}`).join('\n')}\n【今日の達成数】${completedTasks.length}個`
+      ? `\n\n【最近の完了タスク】\n${completedTasks.slice(0, 5).map((t) => `- ${t?.title || '(untitled)'}`).join('\n')}\n【最近の完了数】${completedTasks.length}個`
       : '';
 
     // ユーザープロンプト組み立て
@@ -211,8 +211,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ line: fallbackLine, source: 'fallback' });
     }
 
-    // キャッシュに保存
-    lineCache.set(cacheKey, { line: text, timestamp: Date.now() });
+    // キャッシュに保存（taskTitle/タスク履歴がない場合のみ）
+    if (!taskTitle && !hasTaskHistory) {
+      lineCache.set(cacheKey, { line: text, timestamp: Date.now() });
+    }
 
     return NextResponse.json({ line: text, source: 'gemini' });
   } catch (error) {
