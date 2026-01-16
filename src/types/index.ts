@@ -63,6 +63,16 @@ export interface Reward {
 }
 
 /**
+ * 報酬履歴アイテム
+ */
+export interface RewardHistoryItem {
+  points: number;
+  combo: number;
+  taskTitle: string;
+  completedAt: string;  // ISO8601
+}
+
+/**
  * Slack通知のコンテキスト
  * - morning: 朝9時（今日のスタート）
  * - midday: 昼12時（午後に向けて）

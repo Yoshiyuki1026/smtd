@@ -10,9 +10,16 @@ import { useTaskStore } from '@/stores/taskStore';
 import { Plus } from 'lucide-react';
 
 export function TaskInput() {
-  const { addTask, addTaskWithFocus } = useTaskStore();
+  const { addTask, addTaskWithFocus, uiSettings, setDirectAddDefault } = useTaskStore();
   const [inputValue, setInputValue] = useState('');
-  const [directAdd, setDirectAdd] = useState(false);
+  const [directAdd, setDirectAdd] = useState(uiSettings.directAddDefault);
+
+  // トグル変更時に設定を永続化
+  const handleToggle = () => {
+    const newValue = !directAdd;
+    setDirectAdd(newValue);
+    setDirectAddDefault(newValue);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +57,7 @@ export function TaskInput() {
       <div className="mt-3 flex items-center gap-3 px-1">
         <button
           type="button"
-          onClick={() => setDirectAdd(!directAdd)}
+          onClick={handleToggle}
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
             directAdd
               ? 'bg-amber-500/40 border border-amber-500/60'
@@ -64,7 +71,7 @@ export function TaskInput() {
             }`}
           />
         </button>
-        <label className="text-sm text-zinc-400 select-none cursor-pointer" onClick={() => setDirectAdd(!directAdd)}>
+        <label className="text-sm text-zinc-400 select-none cursor-pointer" onClick={handleToggle}>
           今やることに直接追加
         </label>
       </div>

@@ -5,7 +5,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Task, GameState, LunaMode, LunaContext, Reward, BlackHoleItem } from '@/types';
+import type { Task, GameState, LunaMode, LunaContext, Reward, BlackHoleItem, RewardHistoryItem } from '@/types';
 
 // ユニークID生成
 const generateId = () => Math.random().toString(36).substring(2, 9);
@@ -60,6 +60,15 @@ interface TaskStore {
   unarchiveBlackHoleItem: (id: string) => void;  // アーカイブ→未整理
   deleteBlackHoleItem: (id: string) => void;
   convertBlackHoleToTask: (id: string) => void;  // BlackHole→控え室タスク
+
+  // UI設定（永続化）
+  uiSettings: {
+    directAddDefault: boolean;  // 「今やることに直接追加」のデフォルト
+  };
+  setDirectAddDefault: (value: boolean) => void;
+
+  // 報酬履歴（直近10件）
+  rewardHistory: RewardHistoryItem[];
 }
 
 export const useTaskStore = create<TaskStore>()(
@@ -128,7 +137,7 @@ export const useTaskStore = create<TaskStore>()(
       },
 
       completeTask: (id: string) => {
-        const { tasks, gameState } = get();
+        const { tasks, gameState, rewardHistory } = get();
         const task = tasks.find((t) => t.id === id);
         if (!task || task.completed) return;
 
@@ -138,13 +147,20 @@ export const useTaskStore = create<TaskStore>()(
 
         // ポイント計算（基本1000pt × コンボ倍率）
         const points = 1000 * newCombo;
+        const now = new Date().toISOString();
 
         // タスク更新（完了時にfocusedも解除）
         const updatedTasks = tasks.map((t) =>
           t.id === id
-            ? { ...t, completed: true, focused: false, completedAt: new Date().toISOString() }
+            ? { ...t, completed: true, focused: false, completedAt: now }
             : t
         );
+
+        // 報酬履歴に追加（直近10件を保持）
+        const newHistory: RewardHistoryItem[] = [
+          { points, combo: newCombo, taskTitle: task.title, completedAt: now },
+          ...rewardHistory,
+        ].slice(0, 10);
 
         set({
           tasks: updatedTasks,
@@ -153,12 +169,13 @@ export const useTaskStore = create<TaskStore>()(
             completedToday: gameState.completedToday + 1,
             totalStones: gameState.totalStones + 1,
             combo: newCombo,
-            lastCompletedAt: new Date().toISOString(),
+            lastCompletedAt: now,
           },
           lunaMode: 'standard',
           lunaContext: 'success',
           lunaTaskTitle: task.title,  // タスク名を保存
           lastReward: { points, combo: newCombo },
+          rewardHistory: newHistory,
         });
       },
 
@@ -322,6 +339,22 @@ export const useTaskStore = create<TaskStore>()(
           blackHole: blackHole.filter((i) => i.id !== id),
         });
       },
+
+      // ===========================================
+      // UI設定
+      // ===========================================
+      uiSettings: {
+        directAddDefault: true,  // デフォルトON
+      },
+
+      setDirectAddDefault: (value: boolean) => set((state) => ({
+        uiSettings: { ...state.uiSettings, directAddDefault: value },
+      })),
+
+      // ===========================================
+      // 報酬履歴
+      // ===========================================
+      rewardHistory: [],
     }),
     {
       name: 'smtd-storage',
@@ -330,6 +363,8 @@ export const useTaskStore = create<TaskStore>()(
         gameState: state.gameState,
         navigatorMode: state.navigatorMode,
         blackHole: state.blackHole,
+        uiSettings: state.uiSettings,
+        rewardHistory: state.rewardHistory,
       }),
     }
   )
