@@ -99,7 +99,7 @@ export function RewardEffect() {
   // 報酬発生時に演出
   useEffect(() => {
     if (lastReward) {
-      fireConfetti(lastReward.isRare);
+      fireConfetti(lastReward.isRare ?? false);
 
       // レア時は少し長め（2.5秒）、通常は2秒
       const duration = lastReward.isRare ? 2500 : 2000;

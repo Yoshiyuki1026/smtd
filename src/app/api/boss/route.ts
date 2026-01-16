@@ -79,7 +79,7 @@ const FALLBACK_LINES: Record<LunaContext, string[]> = {
 
 // 入力バリデーション用
 const VALID_MODES = ['standard', 'entertained'] as const;
-const VALID_CONTEXTS = ['ignition', 'success', 'failure', 'idle', 'bond', 'breakthrough'] as const;
+const VALID_CONTEXTS = ['ignition', 'success', 'rare_success', 'failure', 'idle', 'bond', 'breakthrough'] as const;
 
 // 接続エラー時のメッセージ
 const CONNECTION_ERROR_LINES = [
