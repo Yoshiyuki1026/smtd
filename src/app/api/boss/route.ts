@@ -156,9 +156,10 @@ export async function POST(request: Request) {
 
     // キャッシュキー生成
     const cacheKey = `boss-${mode}-${context}`;
+    const hasTaskHistory = Array.isArray(completedTasks) && completedTasks.length > 0;
 
-    // キャッシュ確認（taskTitleがない場合のみキャッシュ使用）
-    if (!taskTitle) {
+    // キャッシュ確認（taskTitle/タスク履歴がない場合のみキャッシュ使用）
+    if (!taskTitle && !hasTaskHistory) {
       const cached = lineCache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
         console.log(`Cache hit for ${cacheKey}`);

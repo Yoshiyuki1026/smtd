@@ -53,10 +53,11 @@ export function LunaBar() {
     // モードに応じてAPIエンドポイントを切り替え
     const endpoint = isDogs ? '/api/boss' : '/api/luna';
 
-    // 完了タスクを抽出（直近10件）
-    const completedTasks = tasks
+    // 完了タスクを抽出（completedAt降順で直近10件）
+    const completedTasks = [...tasks]
       .filter(t => t.completed && t.completedAt)
-      .slice(-10)
+      .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())
+      .slice(0, 10)
       .map(t => ({ title: t.title, completedAt: t.completedAt! }));
 
     try {
