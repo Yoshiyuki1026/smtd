@@ -67,7 +67,7 @@ export function FocusSection() {
                   setDragOffsets((prev) => ({ ...prev, [task.id]: offset }));
                 }}
                 onDragEnd={(_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-                  if (info.offset.x > SWIPE_THRESHOLD) {
+                  if (info.offset.x >= SWIPE_THRESHOLD) {
                     completeTask(task.id);
                   }
                   setDragOffsets((prev) => ({ ...prev, [task.id]: 0 }));

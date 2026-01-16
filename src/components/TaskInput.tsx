@@ -5,7 +5,7 @@
 // ジョブズ版: シンプルで直感的
 // ===========================================
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTaskStore } from '@/stores/taskStore';
 import { Plus } from 'lucide-react';
 
@@ -13,6 +13,11 @@ export function TaskInput() {
   const { addTask, addTaskWithFocus, uiSettings, setDirectAddDefault } = useTaskStore();
   const [inputValue, setInputValue] = useState('');
   const [directAdd, setDirectAdd] = useState(uiSettings.directAddDefault);
+
+  // ストア再ハイドレート時にローカル状態を同期
+  useEffect(() => {
+    setDirectAdd(uiSettings.directAddDefault);
+  }, [uiSettings.directAddDefault]);
 
   // トグル変更時に設定を永続化
   const handleToggle = () => {
