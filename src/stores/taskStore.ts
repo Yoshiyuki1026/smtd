@@ -39,6 +39,7 @@ interface TaskStore {
   deleteTask: (id: string) => void;
   focusTask: (id: string) => void;       // 控え室 → 今やること
   unfocusTask: (id: string) => void;     // 今やること → 控え室
+  reorderTasks: (activeId: string, overId: string) => void;  // タスク並び替え
 
   // ゲーム状態
   gameState: GameState;
@@ -67,12 +68,6 @@ interface TaskStore {
   unarchiveBlackHoleItem: (id: string) => void;  // アーカイブ→未整理
   deleteBlackHoleItem: (id: string) => void;
   convertBlackHoleToTask: (id: string) => void;  // BlackHole→控え室タスク
-
-  // UI設定（永続化）
-  uiSettings: {
-    directAddDefault: boolean;  // 「今やることに直接追加」のデフォルト
-  };
-  setDirectAddDefault: (value: boolean) => void;
 
   // 報酬履歴（直近10件）
   rewardHistory: RewardHistoryItem[];
@@ -141,6 +136,29 @@ export const useTaskStore = create<TaskStore>()(
             t.id === id ? { ...t, focused: false } : t
           ),
         });
+      },
+
+      reorderTasks: (activeId: string, overId: string) => {
+        const { tasks } = get();
+
+        // 同一IDなら何もしない
+        if (activeId === overId) return;
+
+        const activeIndex = tasks.findIndex((t) => t.id === activeId);
+        const overIndex = tasks.findIndex((t) => t.id === overId);
+
+        if (activeIndex === -1 || overIndex === -1) return;
+
+        // 異なるfocused状態間での移動は禁止（それはfocusTask/unfocusTaskの役割）
+        const activeTask = tasks[activeIndex];
+        const overTask = tasks[overIndex];
+        if (activeTask.focused !== overTask.focused) return;
+
+        const newTasks = [...tasks];
+        const [movedTask] = newTasks.splice(activeIndex, 1);
+        newTasks.splice(overIndex, 0, movedTask);
+
+        set({ tasks: newTasks });
       },
 
       completeTask: (id: string) => {
@@ -386,17 +404,6 @@ export const useTaskStore = create<TaskStore>()(
       },
 
       // ===========================================
-      // UI設定
-      // ===========================================
-      uiSettings: {
-        directAddDefault: true,  // デフォルトON
-      },
-
-      setDirectAddDefault: (value: boolean) => set((state) => ({
-        uiSettings: { ...state.uiSettings, directAddDefault: value },
-      })),
-
-      // ===========================================
       // 報酬履歴
       // ===========================================
       rewardHistory: [],
@@ -408,7 +415,6 @@ export const useTaskStore = create<TaskStore>()(
         gameState: state.gameState,
         navigatorMode: state.navigatorMode,
         blackHole: state.blackHole,
-        uiSettings: state.uiSettings,
         rewardHistory: state.rewardHistory,
       }),
     }
