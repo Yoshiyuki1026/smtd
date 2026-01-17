@@ -35,7 +35,8 @@ export function RewardEffect() {
 
   // 紙吹雪を発射
   const fireConfetti = useCallback((isRare: boolean = false) => {
-    const count = isRare ? 300 : 200;  // レア時は多め
+    // Phase 2.7: 3倍化（200→600）+ 初速度アップ、レア時は1.5倍（900）
+    const count = isRare ? 900 : 600;
     const colors = isRare ? RAINBOW_COLORS : CONFETTI_COLORS;
     const defaults = {
       origin: { y: 0.7 },
@@ -51,10 +52,10 @@ export function RewardEffect() {
       });
     };
 
-    // 複数箇所から発射
+    // 複数箇所から発射（初速度20-27%アップ）
     fire(0.25, {
       spread: 26,
-      startVelocity: 55,
+      startVelocity: 70, // 55→70
       origin: { x: 0.2, y: 0.7 },
     });
     fire(0.2, {
@@ -69,14 +70,14 @@ export function RewardEffect() {
     });
     fire(0.1, {
       spread: 120,
-      startVelocity: 25,
+      startVelocity: 35, // 25→35
       decay: 0.92,
       scalar: 1.2,
       origin: { x: 0.5, y: 0.6 },
     });
     fire(0.1, {
       spread: 120,
-      startVelocity: 45,
+      startVelocity: 55, // 45→55
       origin: { x: 0.5, y: 0.7 },
     });
 

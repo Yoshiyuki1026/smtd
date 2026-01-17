@@ -24,8 +24,15 @@ export function CompletedToday() {
     return completedDate === today;
   });
 
-  // 空の場合は非表示
-  if (completedToday.length === 0) return null;
+  // 空の場合はメッセージ表示
+  if (completedToday.length === 0) {
+    return (
+      <section className="mb-6 text-center text-zinc-500 py-8">
+        <p>今日の完了タスクはまだありません</p>
+        <p className="text-sm mt-1">タスクを完了するとここに表示されます 💎</p>
+      </section>
+    );
+  }
 
   // 完了時刻をフォーマット（HH:MM）
   const formatTime = (isoString: string) => {

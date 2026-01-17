@@ -3,19 +3,17 @@
 // ===========================================
 // BacklogSection - 控え室エリア
 // Industrial Noir Theme
-// 無制限タスク登録、折り畳み可能
+// 無制限タスク登録、タブで表示制御
 // ===========================================
 
-import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDraggable } from '@dnd-kit/core';
 import { useTaskStore } from '@/stores/taskStore';
 import type { Task } from '@/types';
-import { ArrowUp, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowUp, Trash2 } from 'lucide-react';
 
 export function BacklogSection() {
   const { tasks, focusTask, deleteTask } = useTaskStore();
-  const [isOpen, setIsOpen] = useState(false);
 
   // 控え室のタスク（focused=false かつ 未完了）
   const backlogTasks = tasks.filter((t) => !t.focused && !t.completed);
@@ -25,55 +23,25 @@ export function BacklogSection() {
   const canFocus = focusedCount < 3;
 
   return (
-    <section className="mb-6">
-      {/* ヘッダー（折り畳みトグル） */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="mb-3 flex w-full items-center justify-between text-left"
-      >
-        <h2 className="text-lg font-semibold text-zinc-400">
-          控え室
-          <span className="ml-2 text-sm text-zinc-500">
-            ({backlogTasks.length})
-          </span>
-        </h2>
-        <span className="text-zinc-500">
-          {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-        </span>
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
-            {/* タスク一覧 */}
-            <div className="space-y-2">
-              <AnimatePresence mode="popLayout">
-                {backlogTasks.map((task) => (
-                  <BacklogTaskItem
-                    key={task.id}
-                    task={task}
-                    canFocus={canFocus}
-                    onFocus={focusTask}
-                    onDelete={deleteTask}
-                  />
-                ))}
-              </AnimatePresence>
-
-              {backlogTasks.length === 0 && (
-                <div className="rounded-lg border border-dashed border-zinc-800 p-4 text-center text-sm text-zinc-600">
-                  控え室は空です
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
+    <div className="space-y-2">
+      <AnimatePresence mode="popLayout">
+        {backlogTasks.map((task) => (
+          <BacklogTaskItem
+            key={task.id}
+            task={task}
+            canFocus={canFocus}
+            onFocus={focusTask}
+            onDelete={deleteTask}
+          />
+        ))}
       </AnimatePresence>
-    </section>
+
+      {backlogTasks.length === 0 && (
+        <div className="rounded-lg border border-dashed border-zinc-800 p-4 text-center text-sm text-zinc-600">
+          控え室は空です
+        </div>
+      )}
+    </div>
   );
 }
 

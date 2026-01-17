@@ -68,13 +68,65 @@ const CONTEXT_PROMPTS: Record<LunaContext, string> = {
 
 // フォールバック用の静的セリフ
 const FALLBACK_LINES: Record<LunaContext, string[]> = {
-  ignition: ['……待たせたな。で、今日の仕事は？', '……ん？ ああ、悪い。二日酔いだ。'],
-  success: ['ふむ。いいセンスだ。', '報酬は確認した。悪くない。'],
-  rare_success: ['……これは、いい仕事だ。', 'ふむ……特別な瞬間だな。'],
-  failure: ['やれやれ……まあいい。', '……次があるさ。'],
-  idle: ['……暇か？ 俺もだ。', '休息も任務のうちだ。'],
-  bond: ['……死ぬなよ。', '無理するな。明日もあるんだからな。'],
-  breakthrough: ['やれやれ、また厄介事か。……やるしかないな。', '……逃げても追いかけてくるぞ、そういうのは。'],
+  ignition: [
+    '……待たせたな。で、今日の仕事は？',
+    '……ん？ ああ、悪い。二日酔いだ。',
+    '目が覚めたか。さて始めるか。',
+    '……いいセンスで目覚めたな。今日はどうする？',
+    '今日も生存目標で行くぞ。構えてくれ。',
+    'ふむ。朝か。俺も起きるか。',
+    '準備はいいか。時間を無駄にするなよ。',
+  ],
+  success: [
+    'ふむ。いいセンスだ。',
+    '報酬は確認した。悪くない。',
+    '……よくやった。その調子だ。',
+    'いいセンスで決めたな。誇っていい。',
+    '報酬は本物だ。おまえの実力だ。',
+    '……悪くない。本当だ。',
+    'ふむ。期待以上だった。お疲れ。',
+  ],
+  rare_success: [
+    '……これは、いい仕事だ。',
+    'ふむ……特別な瞬間だな。',
+    '……見事だ。俺も感心した。',
+  ],
+  failure: [
+    'やれやれ……まあいい。',
+    '……次があるさ。',
+    'そうか。判断だ。責めはしない。',
+    '……誰にでも諦める時がある。気にするな。',
+    'ふむ。次に繋ぐんだ。それが全てだ。',
+    '……生きてるだけで十分だ。今は休め。',
+    'やれやれ。悪い判断じゃあない。続こう。',
+  ],
+  idle: [
+    '……暇か？ 俺もだ。',
+    '休息も任務のうちだ。',
+    'ふむ。息つく時間も必要だな。',
+    '……何もしない時間も大事だ。忘れるな。',
+    '次のミッション待機か。いいセンスだ。',
+    '……じっと考える時間も戦術のうちだ。',
+    '退屈だな。だが、それも必要か。',
+  ],
+  bond: [
+    '……死ぬなよ。',
+    '無理するな。明日もあるんだからな。',
+    'ふむ。ずいぶん働いてるな。',
+    '……こんな時間までお疲れ。無理は禁止だ。',
+    'その頑張り、見てる。だが休め。',
+    '深夜戦は避けろ。死ぬぞ。',
+    'やれやれ……でも、それが好きなのか。あんたらしい。',
+  ],
+  breakthrough: [
+    'やれやれ、また厄介事か。……やるしかないな。',
+    '……逃げても追いかけてくるぞ、そういうのは。',
+    '……それか。ずっと逃げてたな。決めろ。',
+    'ふむ。覚悟を決める時か。やるなら今だ。',
+    '……いつもそうだ。先延ばしは己の敵だ。わかるな。',
+    'やれやれ。厄介だが、やるしかねえ。こっちだ。',
+    '……逃げは終りだ。立ち上がれ。俺がついてる。',
+  ],
 };
 
 // 入力バリデーション用
@@ -95,10 +147,11 @@ function getRandomFromArray<T>(arr: T[]): T {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { mode, context, taskTitle } = body as {
+    const { mode, context, taskTitle, completedTasks } = body as {
       mode: LunaMode;
       context: LunaContext;
       taskTitle?: string;
+      completedTasks?: Array<{ title: string; completedAt: string }>;
     };
 
     // 入力バリデーション
@@ -109,9 +162,10 @@ export async function POST(request: Request) {
 
     // キャッシュキー生成
     const cacheKey = `boss-${mode}-${context}`;
+    const hasTaskHistory = Array.isArray(completedTasks) && completedTasks.length > 0;
 
-    // キャッシュ確認（taskTitleがない場合のみキャッシュ使用）
-    if (!taskTitle) {
+    // キャッシュ確認（taskTitle/タスク履歴がない場合のみキャッシュ使用）
+    if (!taskTitle && !hasTaskHistory) {
       const cached = lineCache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
         console.log(`Cache hit for ${cacheKey}`);
@@ -134,6 +188,11 @@ export async function POST(request: Request) {
                         hour < 12 ? '午前' :
                         hour < 18 ? '午後' : '夜';
 
+    // タスク履歴コンテキスト生成（null guard追加）
+    const taskHistoryContext = completedTasks && completedTasks.length > 0
+      ? `\n\n【最近の完了タスク】\n${completedTasks.slice(0, 5).map((t) => `- ${t?.title || '(untitled)'}`).join('\n')}\n【最近の完了数】${completedTasks.length}個`
+      : '';
+
     // ユーザープロンプト組み立て
     let userPrompt = `【状況】
 - モード: ${mode}
@@ -144,7 +203,7 @@ export async function POST(request: Request) {
       userPrompt += `\n- タスク名: ${taskTitle}`;
     }
 
-    userPrompt += `\n\n【指示】\n${CONTEXT_PROMPTS[context]}`;
+    userPrompt += `${taskHistoryContext}\n\n【指示】\n${CONTEXT_PROMPTS[context]}`;
 
     // 新SDK: thinkingLevel: MINIMAL で最速モード
     const result = await genAI.models.generateContent({
@@ -168,8 +227,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ line: fallbackLine, source: 'fallback' });
     }
 
-    // キャッシュに保存（taskTitleがない場合のみ）
-    if (!taskTitle) {
+    // キャッシュに保存（taskTitle/タスク履歴がない場合のみ）
+    if (!taskTitle && !hasTaskHistory) {
       lineCache.set(cacheKey, { line: text, timestamp: Date.now() });
     }
 
