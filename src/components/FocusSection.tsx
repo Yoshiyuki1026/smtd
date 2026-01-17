@@ -68,7 +68,7 @@ export function FocusSection() {
         {emptySlots > 0 && (
           <div className="rounded-xl border border-dashed border-zinc-700 p-4 text-center text-zinc-600">
             {focusedTasks.length === 0 ? (
-              <span>控え室からタスクを選んで始めよう</span>
+              <span>タスクを追加して始めよう</span>
             ) : (
               <span>あと {emptySlots} つ追加できる</span>
             )}
