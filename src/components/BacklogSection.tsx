@@ -78,7 +78,7 @@ function BacklogTaskItem({
       <button
         onClick={() => onFocus(task.id)}
         disabled={!canFocus}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-amber-500 transition-all hover:bg-amber-500/20 disabled:opacity-30 disabled:cursor-not-allowed focus:ring-2 focus:ring-amber-400"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-amber-500 transition-all hover:bg-amber-500/20 disabled:opacity-30 disabled:cursor-not-allowed focus:ring-2 focus:ring-amber-400 active:scale-95 active:ring-2 active:ring-amber-400/50"
         aria-label="今やることに追加"
         title={canFocus ? '今やることに追加' : '3つまで'}
       >
@@ -96,7 +96,7 @@ function BacklogTaskItem({
       {/* 削除ボタン（タッチターゲット最適化: 40px） */}
       <button
         onClick={() => onDelete(task.id)}
-        className="flex h-10 w-10 items-center justify-center rounded-lg text-zinc-600 opacity-0 transition-all hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100 focus:opacity-100 focus:ring-2 focus:ring-amber-400"
+        className="flex h-10 w-10 items-center justify-center rounded-lg text-zinc-600 opacity-0 transition-all hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100 focus:opacity-100 focus:ring-2 focus:ring-amber-400 active:scale-95 active:ring-2 active:ring-red-400/50"
         aria-label="削除"
       >
         <Trash2 size={18} />

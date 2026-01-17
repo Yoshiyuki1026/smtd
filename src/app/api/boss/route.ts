@@ -55,6 +55,7 @@ const SYSTEM_PROMPT = `あなたは「ボス」というキャラクターです
 const CONTEXT_PROMPTS: Record<LunaContext, string> = {
   ignition: 'アプリを起動した時。「待たせたな」「さて、今日の仕事は？」的な雰囲気で。',
   success: 'タスクを完了した時。「いいセンスだ」「報酬は確認した」的に短く認める。タスク名があれば触れる。',
+  rare_success: 'レアな完了！特別な瞬間を認める。「……これは、いい仕事だ」的に少し感慨深く。',
   failure: 'タスクを削除（サボった）時。責めずに「やれやれ」「まあいい」と流す。',
   idle: '何もしていない時。「暇か？」「休息も任務のうちだ」的な雰囲気。',
   bond: '深夜や長時間作業の時。「死ぬなよ」「無理するな」と短く労う。',
@@ -84,6 +85,11 @@ const FALLBACK_LINES: Record<LunaContext, string[]> = {
     '報酬は本物だ。おまえの実力だ。',
     '……悪くない。本当だ。',
     'ふむ。期待以上だった。お疲れ。',
+  ],
+  rare_success: [
+    '……これは、いい仕事だ。',
+    'ふむ……特別な瞬間だな。',
+    '……見事だ。俺も感心した。',
   ],
   failure: [
     'やれやれ……まあいい。',
@@ -125,7 +131,7 @@ const FALLBACK_LINES: Record<LunaContext, string[]> = {
 
 // 入力バリデーション用
 const VALID_MODES = ['standard', 'entertained'] as const;
-const VALID_CONTEXTS = ['ignition', 'success', 'failure', 'idle', 'bond', 'breakthrough'] as const;
+const VALID_CONTEXTS = ['ignition', 'success', 'rare_success', 'failure', 'idle', 'bond', 'breakthrough'] as const;
 
 // 接続エラー時のメッセージ
 const CONNECTION_ERROR_LINES = [

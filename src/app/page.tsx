@@ -170,9 +170,11 @@ export default function Home() {
             {activeSection === 'blackhole' && <BlackHole />}
           </section>
 
-          {/* フッター */}
+          {/* フッター - Epic Meaning */}
           <footer className="mt-12 text-center text-xs text-zinc-600">
-            <p>Supermassive Task Drive v0.3.0</p>
+            <p className="italic">「お前の脳は壊れてない。ツールが壊れてるんだ。」</p>
+            <p className="mt-1 font-semibold text-amber-600/70">8勝7敗で、生き残れ。</p>
+            <p className="mt-2 text-zinc-700">Supermassive Task Drive v0.3.0</p>
           </footer>
         </main>
       </div>

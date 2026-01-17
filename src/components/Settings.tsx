@@ -16,7 +16,7 @@ interface SettingsProps {
 }
 
 export function Settings({ isOpen, onClose }: SettingsProps) {
-  const { gameState, rebirth } = useTaskStore();
+  const { gameState, rebirth, rewardHistory } = useTaskStore();
   const [showRebirthConfirm, setShowRebirthConfirm] = useState(false);
   const [showRebirthCutscene, setShowRebirthCutscene] = useState(false);
 
@@ -56,24 +56,47 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                 <h2 className="text-2xl font-bold text-zinc-100">設定</h2>
               </div>
 
-              {/* 情報セクション */}
-              <div className="space-y-4 bg-zinc-800/50 rounded-lg p-4">
+              {/* 総資産ハイライト */}
+              <div className="bg-zinc-800/50 rounded-lg p-4">
+                <div className="text-center mb-4">
+                  <span className="text-4xl font-bold text-amber-400">
+                    {gameState.totalStones.toLocaleString()}
+                  </span>
+                  <p className="text-sm text-zinc-500 mt-1">Total Diamonds 💎</p>
+                </div>
+
                 {/* 転生回数 */}
-                <div className="flex items-center justify-between">
-                  <span className="text-zinc-400">転生回数</span>
-                  <span className="text-xl font-bold text-purple-400">
+                <div className="flex items-center justify-between py-2 border-t border-zinc-700">
+                  <span className="text-zinc-400 text-sm">転生回数</span>
+                  <span className="text-lg font-bold text-purple-400">
                     第 {gameState.rebirthCount ?? 0} 周目
                   </span>
                 </div>
-
-                {/* 総資産 */}
-                <div className="flex items-center justify-between pt-2 border-t border-zinc-700">
-                  <span className="text-zinc-400">総資産 (ダイヤ)</span>
-                  <span className="text-xl font-bold text-amber-400">
-                    {gameState.totalStones.toLocaleString()}
-                  </span>
-                </div>
               </div>
+
+              {/* 直近の報酬履歴 */}
+              {rewardHistory.length > 0 && (
+                <div className="bg-zinc-800/50 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-zinc-400 mb-3">📊 最近の達成</h3>
+                  <div className="space-y-2">
+                    {rewardHistory.slice(0, 5).map((item, i) => (
+                      <div key={i} className="flex justify-between items-center text-sm">
+                        <span className="text-zinc-300 truncate max-w-[60%]">
+                          {item.taskTitle}
+                        </span>
+                        <span className="text-amber-400 font-medium">
+                          +{item.points.toLocaleString()}
+                          {item.combo > 1 && (
+                            <span className="text-xs text-orange-400 ml-1">
+                              ×{item.combo}
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* 転生ボタン */}
               <button
