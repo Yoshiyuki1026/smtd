@@ -103,19 +103,16 @@ export default function Home() {
           <header className="mb-6">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold tracking-tight">
-                  <span className="text-rust-gradient">
-                    Supermassive Task Drive
-                  </span>
-                </h1>
-                {/* Phase 2.9: ストリーク表示 */}
-                {gameState.streak > 0 && (
+                {/* Phase 2.9: ストリーク表示（タイトル削除、ストリークのみ左寄せ） */}
+                {gameState.streak > 0 ? (
                   <div className="flex items-center gap-1 px-2 py-1 bg-amber-500/20 rounded-full">
                     <span className="text-lg">🔥</span>
                     <span className="text-sm font-bold text-amber-400">
                       {gameState.streak === 1 ? '1日目' : `${gameState.streak}日連続`}
                     </span>
                   </div>
+                ) : (
+                  <div className="h-8" />
                 )}
               </div>
               <div className="flex items-center gap-2">
@@ -156,11 +153,16 @@ export default function Home() {
             {/* ゴールカウンター（ヘッダー統合） */}
             <div className="flex items-center justify-between">
               <GoalCounter />
-              {/* Phase 2.9: 今日の一撃達成バッジ */}
-              {gameState.todayStrikeAchieved && (
+              {/* Phase 2.9: 今日の一撃バッジ（達成/未達成で分岐） */}
+              {gameState.todayStrikeAchieved ? (
                 <div className="text-xs text-green-400 flex items-center gap-1">
                   <span>✓</span>
                   <span>今日の一撃達成</span>
+                </div>
+              ) : (
+                <div className="text-xs text-amber-400 flex items-center gap-1 animate-pulse">
+                  <span>⚡</span>
+                  <span>今日の一撃を狙え</span>
                 </div>
               )}
             </div>

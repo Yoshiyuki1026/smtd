@@ -13,6 +13,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useTaskStore } from '@/stores/taskStore';
+import type { Task } from '@/types';
 import { Check, ArrowDown, GripVertical } from 'lucide-react';
 
 const MAX_FOCUS = 3;
@@ -86,7 +87,7 @@ function FocusTaskItem({
   onComplete,
   onUnfocus,
 }: {
-  task: { id: string; title: string };
+  task: Task;
   dragOffset: number;
   onDragOffset: (offset: number) => void;
   onComplete: (id: string) => void;
@@ -113,8 +114,17 @@ function FocusTaskItem({
     <motion.div
       ref={setNodeRef}
       layout={!isDragging}
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: isDragging ? 0.5 : 1, y: 0 }}
+      initial={{ opacity: 0, y: -20, scale: 0.95 }}
+      animate={{
+        opacity: isDragging ? 0.5 : 1,
+        y: 0,
+        scale: 1,
+      }}
+      transition={{
+        type: "spring",
+        stiffness: 300,
+        damping: 20,
+      }}
       exit={{ opacity: 0, scale: 0.9 }}
       className="group relative rounded-lg border-industrial bg-zinc-900/80 p-4 overflow-hidden"
       style={sortableStyle}
@@ -134,6 +144,7 @@ function FocusTaskItem({
         {/* ドラッグハンドル（並び替え用） */}
         <div
           className="flex h-10 w-6 shrink-0 items-center justify-center text-zinc-600 cursor-grab active:cursor-grabbing touch-none"
+          title="ドラッグして並び替え"
           {...attributes}
           {...listeners}
         >
@@ -160,11 +171,12 @@ function FocusTaskItem({
             const offset = Math.max(0, info.offset.x);
             onDragOffset(offset);
           }}
+          // onDragEnd: ドラッグ完了 or キャンセル（Escape含む）で呼ばれる
           onDragEnd={(_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
             if (info.offset.x >= SWIPE_THRESHOLD) {
               onComplete(task.id);
             }
-            onDragOffset(0);
+            onDragOffset(0); // 必ずリセット
           }}
         >
           {task.title}

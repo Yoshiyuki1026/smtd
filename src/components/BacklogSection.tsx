@@ -79,8 +79,17 @@ function BacklogTaskItem({
     <motion.div
       ref={setNodeRef}
       layout={!isDragging}
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: isDragging ? 0.5 : 1, x: 0 }}
+      initial={{ opacity: 0, x: -20, scale: 0.95 }}
+      animate={{
+        opacity: isDragging ? 0.5 : 1,
+        x: 0,
+        scale: 1,
+      }}
+      transition={{
+        type: "spring",
+        stiffness: 300,
+        damping: 20,
+      }}
       exit={{ opacity: 0, x: 20 }}
       className="group flex items-center gap-3 rounded-lg bg-zinc-900/50 border border-zinc-800 px-4 py-3"
       style={style}
@@ -88,6 +97,7 @@ function BacklogTaskItem({
       {/* ドラッグハンドル */}
       <div
         className="flex h-10 w-6 shrink-0 items-center justify-center text-zinc-600 cursor-grab active:cursor-grabbing touch-none"
+        title="ドラッグして並び替え"
         {...attributes}
         {...listeners}
       >
