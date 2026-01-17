@@ -85,7 +85,9 @@ export default function Home() {
                 {gameState.streak > 0 && (
                   <div className="flex items-center gap-1 px-2 py-1 bg-amber-500/20 rounded-full">
                     <span className="text-lg">🔥</span>
-                    <span className="text-sm font-bold text-amber-400">{gameState.streak}日連続</span>
+                    <span className="text-sm font-bold text-amber-400">
+                      {gameState.streak === 1 ? '1日目' : `${gameState.streak}日連続`}
+                    </span>
                   </div>
                 )}
               </div>

@@ -241,7 +241,10 @@ export const useTaskStore = create<TaskStore>()(
           // 日付が変わった
           const yesterday = getYesterdayDate();
           // Phase 2.9: 昨日一撃達成してたらストリーク継続、してなかったらリセット
-          const wasStrikeYesterday = gameState.lastStrikeDate === yesterday;
+          // 後方互換: lastStrikeDateが未定義の場合はストリークリセット
+          const wasStrikeYesterday = gameState.lastStrikeDate
+            ? gameState.lastStrikeDate === yesterday
+            : false;
           const newStreak = wasStrikeYesterday ? gameState.streak : 0;
 
           set({
@@ -277,10 +280,10 @@ export const useTaskStore = create<TaskStore>()(
             todayDate: getTodayDate(),
             rebirthCount: gameState.rebirthCount + 1,  // インクリメント
             lastCompletedAt: undefined,
-            // Phase 2.9: ストリークは転生時も保持
-            streak: gameState.streak,
-            lastStrikeDate: gameState.lastStrikeDate,
-            todayStrikeAchieved: gameState.todayStrikeAchieved,
+            // Phase 2.9: 転生 = 新サイクル開始、ストリークもリセット
+            streak: 0,
+            lastStrikeDate: undefined,
+            todayStrikeAchieved: false,  // 新しい一撃を狙える
           },
           blackHole: archivedBlackHole,
           lunaMode: 'standard',
