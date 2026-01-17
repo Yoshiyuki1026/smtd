@@ -424,8 +424,9 @@ src/
 - 岩谷先生参考資料: `/Users/y-suzuki/projects/his-dev/参考資料/岩谷先生/`
 
 **開発・デプロイ**:
+- **本番URL**: https://smtd.neuro-ronin.com/
 - リポジトリ: GitHub `smtd` (https://github.com/Yoshiyuki1026/smtd)
-- デプロイ環境: Cloudflare Pages（自動デプロイ）
+- デプロイ環境: Cloudflare Pages（mainブランチへのマージで自動デプロイ）
 - 開発サーバー: `npm run dev` → http://localhost:3000
 - ビルド: `npm run build`
 - Lint: `npm run lint`
