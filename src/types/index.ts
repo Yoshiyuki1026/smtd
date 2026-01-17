@@ -25,6 +25,10 @@ export interface GameState {
   lastCompletedAt?: string;  // 最後にタスク完了した日時
   todayDate: string;         // 今日の日付（YYYY-MM-DD）
   rebirthCount: number;      // 転生回数
+  // Phase 2.9: ストリーク機能
+  streak: number;              // 連続達成日数
+  lastStrikeDate?: string;     // 最後に一撃を達成した日付 (YYYY-MM-DD)
+  todayStrikeAchieved: boolean; // 今日の一撃を達成したか
 }
 
 /**
@@ -43,8 +47,9 @@ export type LunaMode = 'standard' | 'entertained';
  * - idle: 待機中
  * - bond: 連星の絆（深夜帯、長時間放置）
  * - breakthrough: 先延ばしブレイクスルー（叱咤激励）
+ * - daily_strike: 今日の一撃達成
  */
-export type LunaContext = 'ignition' | 'success' | 'rare_success' | 'failure' | 'idle' | 'bond' | 'breakthrough';
+export type LunaContext = 'ignition' | 'success' | 'rare_success' | 'failure' | 'idle' | 'bond' | 'breakthrough' | 'daily_strike';
 
 /**
  * ルナの状態
@@ -61,7 +66,8 @@ export interface LunaState {
 export interface Reward {
   points: number;
   combo: number;
-  isRare?: boolean;  // 10%でレア演出
+  isRare?: boolean;       // 10%でレア演出
+  isDailyStrike?: boolean; // 今日の一撃
 }
 
 /**

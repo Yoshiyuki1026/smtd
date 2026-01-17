@@ -13,6 +13,13 @@ const generateId = () => Math.random().toString(36).substring(2, 9);
 // 今日の日付（YYYY-MM-DD）
 const getTodayDate = () => new Date().toISOString().split('T')[0];
 
+// 昨日の日付（YYYY-MM-DD）- Phase 2.9: ストリーク判定用
+const getYesterdayDate = () => {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return yesterday.toISOString().split('T')[0];
+};
+
 // コンボ判定（5分以内なら継続）
 const isComboActive = (lastCompletedAt?: string) => {
   if (!lastCompletedAt) return false;
@@ -141,16 +148,26 @@ export const useTaskStore = create<TaskStore>()(
         const task = tasks.find((t) => t.id === id);
         if (!task || task.completed) return;
 
+        const now = new Date().toISOString();
+        const today = getTodayDate();
+
+        // Phase 2.9: 今日の一撃判定（その日最初のタスク完了）
+        const isDailyStrike = !gameState.todayStrikeAchieved;
+
         // コンボ計算
         const comboActive = isComboActive(gameState.lastCompletedAt);
         const newCombo = comboActive ? Math.min(gameState.combo + 1, 10) : 1;
 
-        // ポイント計算（基本1000pt × コンボ倍率）
-        const points = 1000 * newCombo;
-        const now = new Date().toISOString();
+        // ポイント計算（基本1000pt × コンボ倍率 × 一撃倍率）
+        const basePoints = 1000;
+        const strikeMultiplier = isDailyStrike ? 1.5 : 1;
+        const points = Math.floor(basePoints * newCombo * strikeMultiplier);
 
         // 10%の確率でレア判定
         const isRare = Math.random() < 0.1;
+
+        // Phase 2.9: ストリーク更新（一撃時のみ+1）
+        const newStreak = isDailyStrike ? gameState.streak + 1 : gameState.streak;
 
         // タスク更新（完了時にfocusedも解除）
         const updatedTasks = tasks.map((t) =>
@@ -165,6 +182,9 @@ export const useTaskStore = create<TaskStore>()(
           ...rewardHistory,
         ].slice(0, 10);
 
+        // Phase 2.9: コンテキスト決定（一撃 > レア > 通常）
+        const lunaContext = isDailyStrike ? 'daily_strike' : (isRare ? 'rare_success' : 'success');
+
         set({
           tasks: updatedTasks,
           gameState: {
@@ -173,11 +193,15 @@ export const useTaskStore = create<TaskStore>()(
             totalStones: gameState.totalStones + 1,
             combo: newCombo,
             lastCompletedAt: now,
+            // Phase 2.9: ストリーク更新
+            streak: newStreak,
+            lastStrikeDate: isDailyStrike ? today : gameState.lastStrikeDate,
+            todayStrikeAchieved: true,
           },
           lunaMode: 'standard',
-          lunaContext: isRare ? 'rare_success' : 'success',  // レア時は特別なコンテキスト
-          lunaTaskTitle: task.title,  // タスク名を保存
-          lastReward: { points, combo: newCombo, isRare },  // isRare追加
+          lunaContext,
+          lunaTaskTitle: task.title,
+          lastReward: { points, combo: newCombo, isRare, isDailyStrike },
           rewardHistory: newHistory,
         });
       },
@@ -203,6 +227,10 @@ export const useTaskStore = create<TaskStore>()(
         combo: 0,
         todayDate: getTodayDate(),
         rebirthCount: 0,
+        // Phase 2.9: ストリーク機能
+        streak: 0,
+        lastStrikeDate: undefined,
+        todayStrikeAchieved: false,
       },
 
       checkDateChange: () => {
@@ -211,7 +239,14 @@ export const useTaskStore = create<TaskStore>()(
 
         if (gameState.todayDate !== today) {
           // 日付が変わった
-          // completedToday, comboをリセット（タスクは維持）
+          const yesterday = getYesterdayDate();
+          // Phase 2.9: 昨日一撃達成してたらストリーク継続、してなかったらリセット
+          // 後方互換: lastStrikeDateが未定義の場合はストリークリセット
+          const wasStrikeYesterday = gameState.lastStrikeDate
+            ? gameState.lastStrikeDate === yesterday
+            : false;
+          const newStreak = wasStrikeYesterday ? gameState.streak : 0;
+
           set({
             gameState: {
               ...gameState,
@@ -219,6 +254,9 @@ export const useTaskStore = create<TaskStore>()(
               combo: 0,
               todayDate: today,
               lastCompletedAt: undefined,
+              // Phase 2.9: ストリーク関連リセット
+              todayStrikeAchieved: false,
+              streak: newStreak,
             },
             // タスクは削除しない（完了タスクも維持）
             lunaMode: 'standard',
@@ -242,6 +280,10 @@ export const useTaskStore = create<TaskStore>()(
             todayDate: getTodayDate(),
             rebirthCount: gameState.rebirthCount + 1,  // インクリメント
             lastCompletedAt: undefined,
+            // Phase 2.9: 転生 = 新サイクル開始、ストリークもリセット
+            streak: 0,
+            lastStrikeDate: undefined,
+            todayStrikeAchieved: false,  // 新しい一撃を狙える
           },
           blackHole: archivedBlackHole,
           lunaMode: 'standard',
