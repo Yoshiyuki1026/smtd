@@ -25,7 +25,7 @@ import { Settings as SettingsIcon } from 'lucide-react';
 // DiamondPile は CompletedToday 内で表示（重複防止）
 
 export default function Home() {
-  const { checkDateChange, focusTask } = useTaskStore();
+  const { checkDateChange, focusTask, gameState } = useTaskStore();
   const { user, isLoading: authLoading, signOut } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -72,14 +72,23 @@ export default function Home() {
         <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 
         <main className="mx-auto max-w-lg px-4 py-8">
-          {/* ヘッダー: タイトル + ゴールカウンター + 認証 + 設定 */}
+          {/* ヘッダー: タイトル + ストリーク + ゴールカウンター + 認証 + 設定 */}
           <header className="mb-6">
             <div className="flex items-center justify-between mb-2">
-              <h1 className="text-2xl font-bold tracking-tight">
-                <span className="text-rust-gradient">
-                  Supermassive Task Drive
-                </span>
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold tracking-tight">
+                  <span className="text-rust-gradient">
+                    Supermassive Task Drive
+                  </span>
+                </h1>
+                {/* Phase 2.9: ストリーク表示 */}
+                {gameState.streak > 0 && (
+                  <div className="flex items-center gap-1 px-2 py-1 bg-amber-500/20 rounded-full">
+                    <span className="text-lg">🔥</span>
+                    <span className="text-sm font-bold text-amber-400">{gameState.streak}日連続</span>
+                  </div>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 {/* 設定ボタン */}
                 <button
@@ -116,7 +125,16 @@ export default function Home() {
               </div>
             </div>
             {/* ゴールカウンター（ヘッダー統合） */}
-            <GoalCounter />
+            <div className="flex items-center justify-between">
+              <GoalCounter />
+              {/* Phase 2.9: 今日の一撃達成バッジ */}
+              {gameState.todayStrikeAchieved && (
+                <div className="text-xs text-green-400 flex items-center gap-1">
+                  <span>✓</span>
+                  <span>今日の一撃達成</span>
+                </div>
+              )}
+            </div>
           </header>
 
           {/* ルナ（主役！タイトルと今やることの間） */}
