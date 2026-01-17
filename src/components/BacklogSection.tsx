@@ -2,15 +2,16 @@
 
 // ===========================================
 // BacklogSection - 控え室エリア
-// Industrial Noir Theme
-// 無制限タスク登録、タブで表示制御
+// Phase 2.10: D&D並び替え対応
 // ===========================================
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useDraggable } from '@dnd-kit/core';
+import { useSortable } from '@dnd-kit/sortable';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useTaskStore } from '@/stores/taskStore';
 import type { Task } from '@/types';
-import { ArrowUp, Trash2 } from 'lucide-react';
+import { ArrowUp, Trash2, GripVertical } from 'lucide-react';
 
 export function BacklogSection() {
   const { tasks, focusTask, deleteTask } = useTaskStore();
@@ -24,17 +25,19 @@ export function BacklogSection() {
 
   return (
     <div className="space-y-2">
-      <AnimatePresence mode="popLayout">
-        {backlogTasks.map((task) => (
-          <BacklogTaskItem
-            key={task.id}
-            task={task}
-            canFocus={canFocus}
-            onFocus={focusTask}
-            onDelete={deleteTask}
-          />
-        ))}
-      </AnimatePresence>
+      <SortableContext items={backlogTasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+        <AnimatePresence mode="popLayout">
+          {backlogTasks.map((task) => (
+            <BacklogTaskItem
+              key={task.id}
+              task={task}
+              canFocus={canFocus}
+              onFocus={focusTask}
+              onDelete={deleteTask}
+            />
+          ))}
+        </AnimatePresence>
+      </SortableContext>
 
       {backlogTasks.length === 0 && (
         <div className="rounded-lg border border-dashed border-zinc-800 p-4 text-center text-sm text-zinc-600">
@@ -45,7 +48,7 @@ export function BacklogSection() {
   );
 }
 
-// ドラッグ可能なタスクアイテム
+// ソート可能なタスクアイテム
 function BacklogTaskItem({
   task,
   canFocus,
@@ -57,23 +60,40 @@ function BacklogTaskItem({
   onFocus: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: task.id,
-  });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   return (
     <motion.div
       ref={setNodeRef}
-      layout
+      layout={!isDragging}
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: isDragging ? 0.5 : 1, x: 0 }}
       exit={{ opacity: 0, x: 20 }}
       className="group flex items-center gap-3 rounded-lg bg-zinc-900/50 border border-zinc-800 px-4 py-3"
-      style={{
-        opacity: isDragging ? 0.5 : 1,
-      }}
-      {...attributes}
+      style={style}
     >
+      {/* ドラッグハンドル */}
+      <div
+        className="flex h-10 w-6 shrink-0 items-center justify-center text-zinc-600 cursor-grab active:cursor-grabbing touch-none"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical size={18} />
+      </div>
+
       {/* 今やることに昇格ボタン（タッチターゲット最適化: 40px） */}
       <button
         onClick={() => onFocus(task.id)}
@@ -85,11 +105,8 @@ function BacklogTaskItem({
         <ArrowUp size={20} />
       </button>
 
-      {/* タスク名（drag handle） */}
-      <span
-        className="flex-1 text-zinc-300 text-sm cursor-grab active:cursor-grabbing"
-        {...listeners}
-      >
+      {/* タスク名 */}
+      <span className="flex-1 text-zinc-300 text-sm">
         {task.title}
       </span>
 

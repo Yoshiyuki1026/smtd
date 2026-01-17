@@ -6,7 +6,15 @@
 // ===========================================
 
 import { useEffect, useState } from 'react';
-import { DndContext, DragEndEvent } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragEndEvent,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
 import { useTaskStore } from '@/stores/taskStore';
 import { useAuth } from '@/providers/AuthProvider';
 import { FocusSection } from '@/components/FocusSection';
@@ -25,18 +33,37 @@ import { Settings as SettingsIcon } from 'lucide-react';
 // DiamondPile は CompletedToday 内で表示（重複防止）
 
 export default function Home() {
-  const { checkDateChange, focusTask, gameState } = useTaskStore();
+  const { checkDateChange, focusTask, reorderTasks, gameState } = useTaskStore();
   const { user, isLoading: authLoading, signOut } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<'backlog' | 'completed' | 'blackhole'>('backlog');
 
+  // センサー設定（タップ/スクロールとの競合回避）
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 5 },
+    })
+  );
+
   // ドラッグ終了時のハンドラ
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    if (!over) return;
 
-    // ドロップ対象が FocusSection の場合
-    if (over?.id === 'focus-droppable') {
+    // Case 1: タスク同士のドロップ（並び替え）
+    if (over.id !== 'focus-droppable') {
+      if (active.id !== over.id) {
+        reorderTasks(String(active.id), String(over.id));
+      }
+      return;
+    }
+
+    // Case 2: 空のFocusエリアへのドロップ（控え室→今やること）
+    if (over.id === 'focus-droppable') {
       focusTask(String(active.id));
     }
   };
@@ -54,7 +81,7 @@ export default function Home() {
   }, [checkDateChange]);
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <div className="min-h-screen bg-black text-zinc-100">
         {/* 報酬演出 */}
         <RewardEffect />
