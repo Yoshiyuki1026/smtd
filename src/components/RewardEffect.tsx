@@ -30,14 +30,24 @@ const RAINBOW_COLORS = [
   '#8b00ff', // 紫
 ];
 
+// Phase 2.9: 今日の一撃用ゴールドパレット
+const STRIKE_COLORS = [
+  '#ffd700', // gold
+  '#ffb800', // darker gold
+  '#ff9500', // orange gold
+  '#fff4e0', // light cream
+  '#ffc107', // amber
+];
+
 export function RewardEffect() {
   const { lastReward, clearReward } = useTaskStore();
 
   // 紙吹雪を発射
-  const fireConfetti = useCallback((isRare: boolean = false) => {
-    // Phase 2.7: 3倍化（200→600）+ 初速度アップ、レア時は1.5倍（900）
-    const count = isRare ? 900 : 600;
-    const colors = isRare ? RAINBOW_COLORS : CONFETTI_COLORS;
+  const fireConfetti = useCallback((isRare: boolean = false, isDailyStrike: boolean = false) => {
+    // Phase 2.9: 一撃時は2倍（1200）、レア時は1.5倍（900）、通常600
+    const count = isDailyStrike ? 1200 : (isRare ? 900 : 600);
+    // Phase 2.9: 一撃時はゴールド系、レア時は虹色、通常はアンバー系
+    const colors = isDailyStrike ? STRIKE_COLORS : (isRare ? RAINBOW_COLORS : CONFETTI_COLORS);
     const defaults = {
       origin: { y: 0.7 },
       zIndex: 9999,
@@ -81,8 +91,22 @@ export function RewardEffect() {
       origin: { x: 0.5, y: 0.7 },
     });
 
+    // Phase 2.9: 一撃時は追加で中央から大きな爆発（ゴールド）
+    if (isDailyStrike) {
+      setTimeout(() => {
+        confetti({
+          particleCount: 100,
+          spread: 360,
+          origin: { y: 0.5, x: 0.5 },
+          colors: STRIKE_COLORS,
+          scalar: 2,
+          gravity: 0.5,
+          zIndex: 9999,
+        });
+      }, 100);
+    }
     // レア時は追加で星形パーティクルを中央から発射
-    if (isRare) {
+    else if (isRare) {
       setTimeout(() => {
         confetti({
           particleCount: 50,
@@ -100,10 +124,10 @@ export function RewardEffect() {
   // 報酬発生時に演出
   useEffect(() => {
     if (lastReward) {
-      fireConfetti(lastReward.isRare ?? false);
+      fireConfetti(lastReward.isRare ?? false, lastReward.isDailyStrike ?? false);
 
-      // レア時は少し長め（2.5秒）、通常は2秒
-      const duration = lastReward.isRare ? 2500 : 2000;
+      // Phase 2.9: 一撃時は3秒、レア時は2.5秒、通常は2秒
+      const duration = lastReward.isDailyStrike ? 3000 : (lastReward.isRare ? 2500 : 2000);
       const timer = setTimeout(() => {
         clearReward();
       }, duration);
@@ -123,12 +147,28 @@ export function RewardEffect() {
           className="fixed inset-0 flex items-center justify-center pointer-events-none z-50"
         >
           <div className="text-center">
+            {/* Phase 2.9: 今日の一撃バッジ */}
+            {lastReward.isDailyStrike && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5, y: -20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="mb-2 text-xl font-bold text-yellow-300 drop-shadow-[0_0_15px_rgba(253,224,71,0.8)]"
+              >
+                ⚡ 今日の一撃!
+              </motion.div>
+            )}
+
             {/* ポイント表示 */}
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: [0, 1.2, 1] }}
               transition={{ duration: 0.5 }}
-              className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-500 to-orange-600 drop-shadow-[0_0_30px_rgba(245,158,11,0.5)]"
+              className={`text-6xl font-black text-transparent bg-clip-text drop-shadow-[0_0_30px_rgba(245,158,11,0.5)] ${
+                lastReward.isDailyStrike
+                  ? 'bg-gradient-to-r from-yellow-300 via-amber-400 to-orange-500'
+                  : 'bg-gradient-to-r from-amber-300 via-amber-500 to-orange-600'
+              }`}
             >
               +{lastReward.points.toLocaleString()}
             </motion.div>

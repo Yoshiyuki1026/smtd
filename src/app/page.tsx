@@ -6,7 +6,15 @@
 // ===========================================
 
 import { useEffect, useState } from 'react';
-import { DndContext, DragEndEvent } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragEndEvent,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
 import { useTaskStore } from '@/stores/taskStore';
 import { useAuth } from '@/providers/AuthProvider';
 import { FocusSection } from '@/components/FocusSection';
@@ -25,18 +33,37 @@ import { Settings as SettingsIcon } from 'lucide-react';
 // DiamondPile は CompletedToday 内で表示（重複防止）
 
 export default function Home() {
-  const { checkDateChange, focusTask } = useTaskStore();
+  const { checkDateChange, focusTask, reorderTasks, gameState } = useTaskStore();
   const { user, isLoading: authLoading, signOut } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<'backlog' | 'completed' | 'blackhole'>('backlog');
 
+  // センサー設定（タップ/スクロールとの競合回避）
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 5 },
+    })
+  );
+
   // ドラッグ終了時のハンドラ
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    if (!over) return;
 
-    // ドロップ対象が FocusSection の場合
-    if (over?.id === 'focus-droppable') {
+    // Case 1: タスク同士のドロップ（並び替え）
+    if (over.id !== 'focus-droppable') {
+      if (active.id !== over.id) {
+        reorderTasks(String(active.id), String(over.id));
+      }
+      return;
+    }
+
+    // Case 2: 空のFocusエリアへのドロップ（控え室→今やること）
+    if (over.id === 'focus-droppable') {
       focusTask(String(active.id));
     }
   };
@@ -54,7 +81,7 @@ export default function Home() {
   }, [checkDateChange]);
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <div className="min-h-screen bg-black text-zinc-100">
         {/* 報酬演出 */}
         <RewardEffect />
@@ -72,14 +99,22 @@ export default function Home() {
         <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 
         <main className="mx-auto max-w-lg px-4 py-8">
-          {/* ヘッダー: タイトル + ゴールカウンター + 認証 + 設定 */}
+          {/* ヘッダー: タイトル + ストリーク + ゴールカウンター + 認証 + 設定 */}
           <header className="mb-6">
             <div className="flex items-center justify-between mb-2">
-              <h1 className="text-2xl font-bold tracking-tight">
-                <span className="text-rust-gradient">
-                  Supermassive Task Drive
-                </span>
-              </h1>
+              <div className="flex items-center gap-3">
+                {/* Phase 2.9: ストリーク表示（タイトル削除、ストリークのみ左寄せ） */}
+                {gameState.streak > 0 ? (
+                  <div className="flex items-center gap-1 px-2 py-1 bg-amber-500/20 rounded-full">
+                    <span className="text-lg">🔥</span>
+                    <span className="text-sm font-bold text-amber-400">
+                      {gameState.streak === 1 ? '1日目' : `${gameState.streak}日連続`}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="h-8" />
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 {/* 設定ボタン */}
                 <button
@@ -116,7 +151,21 @@ export default function Home() {
               </div>
             </div>
             {/* ゴールカウンター（ヘッダー統合） */}
-            <GoalCounter />
+            <div className="flex items-center justify-between">
+              <GoalCounter />
+              {/* Phase 2.9: 今日の一撃バッジ（達成/未達成で分岐） */}
+              {gameState.todayStrikeAchieved ? (
+                <div className="text-xs text-green-400 flex items-center gap-1">
+                  <span>✓</span>
+                  <span>今日の一撃達成</span>
+                </div>
+              ) : (
+                <div className="text-xs text-amber-400 flex items-center gap-1 animate-pulse">
+                  <span>⚡</span>
+                  <span>今日の一撃を狙え</span>
+                </div>
+              )}
+            </div>
           </header>
 
           {/* ルナ（主役！タイトルと今やることの間） */}
